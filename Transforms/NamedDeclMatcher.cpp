@@ -1,5 +1,3 @@
-#include <yamlreader.h>
-
 #include "NamedDeclMatcher.h"
 #include "Transforms.h"
 
@@ -15,16 +13,14 @@ using namespace clang;
 
 bool
 NamedDeclMatcher::loadConfig(
-    const std::string& transformName,
+    const refactorial::config::TransformConfig& transform,
     const std::string& renameKeyName,
     const std::string& ignoreKeyName)
 {
-	yaml::reader::TypeRenameTransform transform = TransformRegistry::get().config.transforms.type_rename_transform;
-
 	// TODO: Add ignore support
 
 	llvm::outs() << "found type translations" << "\n";
-	for (const yaml::reader::Rename& r : transform.types)
+	for (const refactorial::config::Rename& r : transform.renames)
 	{
 		renameList.push_back(RegexStringPair(llvm::Regex(r.from), r.to));
 		llvm::errs() << "from: " << r.from << " to: " << r.to << "\n";

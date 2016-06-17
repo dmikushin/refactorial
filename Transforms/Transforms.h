@@ -20,6 +20,10 @@ class Transform : public clang::ASTConsumer
 protected:
 	clang::CompilerInstance *ci;
 
+	virtual refactorial::config::TransformConfig getTransformConfig() {
+		return refactorial::config::TransformConfig();
+	};
+
 	void insert(clang::SourceLocation loc, std::string text);
 	void replace(clang::SourceRange range, std::string text);
 	void replaceText(clang::SourceRange range, std::string text);
@@ -45,7 +49,7 @@ class TransformRegistry
  private:
 	std::map<std::string,transform_creator> m_transforms;
  public:
-	yaml::reader::Config config;
+	refactorial::config::Config config;
 	std::map<std::string, std::string> touchedFiles;
 	std::vector<clang::tooling::Replacement> *replacements;
 

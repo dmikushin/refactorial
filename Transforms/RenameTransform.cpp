@@ -11,6 +11,10 @@ class TypeRenameTransform : public NamedDeclVisitor {
 public:
   TypeRenameTransform() : NamedDeclVisitor("TypeRename", "Types") {}
 
+	refactorial::config::TransformConfig getTransformConfig() override {
+		return TransformRegistry::get().config.transforms.type_rename_transform;
+	}
+
   const NamedDecl *getEffectiveDecl(const NamedDecl *Decl) override {
     if (dyn_cast<TypeDecl>(Decl) ||
         dyn_cast<ClassTemplateDecl>(Decl) ||
@@ -27,6 +31,10 @@ public:
 class FunctionRenameTransform : public NamedDeclVisitor {
 public:
   FunctionRenameTransform() : NamedDeclVisitor("FunctionRename", "Functions") {}
+
+	refactorial::config::TransformConfig getTransformConfig() override {
+		return TransformRegistry::get().config.transforms.function_rename_transform;
+	}
 
   const NamedDecl *getEffectiveDecl(const NamedDecl *Decl) override {
     if ((dyn_cast<FunctionDecl>(Decl) &&

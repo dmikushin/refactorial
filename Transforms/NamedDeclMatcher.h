@@ -9,6 +9,8 @@
 #include <utility>
 #include <vector>
 
+#include <yamlreader.h>
+
 namespace clang {
 	class CompilerInstance;
 	class Decl;
@@ -23,7 +25,7 @@ namespace llvm {
 class NamedDeclMatcher {
 public:
     bool loadConfig(
-        const std::string& transformName,
+        const refactorial::config::TransformConfig& transform,
         const std::string& renameKeyName,
         const std::string& ignoreKeyName = "Ignore");
 

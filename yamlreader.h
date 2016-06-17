@@ -6,9 +6,9 @@
 using llvm::yaml::MappingTraits;
 using llvm::yaml::IO;
 
-namespace yaml
+namespace refactorial
 {
-	namespace reader
+	namespace config
 	{
 		struct Rename
 		{
@@ -16,14 +16,21 @@ namespace yaml
 			std::string to;
 		};
 
-		struct TypeRenameTransform
+		struct TransformConfig
 		{
-			std::vector<Rename> types;
+			std::vector<Rename> renames;
 		};
+
+		struct FunctionRenameTransform : TransformConfig
+		{};
+
+		struct TypeRenameTransform : TransformConfig
+		{};
 
 		struct Transforms
 		{
 			TypeRenameTransform type_rename_transform;
+			FunctionRenameTransform function_rename_transform;
 		};
 
 		struct Config
@@ -33,33 +40,40 @@ namespace yaml
 	}
 }
 
-LLVM_YAML_IS_SEQUENCE_VECTOR(::yaml::reader::Rename)
+LLVM_YAML_IS_SEQUENCE_VECTOR(::refactorial::config::Rename)
 
 namespace llvm
 {
 	namespace yaml
 	{
-		template <> struct MappingTraits<::yaml::reader::Rename> {
-			static void mapping(IO& io, ::yaml::reader::Rename& r) {
+		template <> struct MappingTraits<::refactorial::config::Rename> {
+			static void mapping(IO& io, ::refactorial::config::Rename& r) {
 				io.mapRequired("From", r.from);
 				io.mapRequired("To", r.to);
 			}
 		};
 
-		template <> struct MappingTraits<::yaml::reader::TypeRenameTransform> {
-			static void mapping(IO& io, ::yaml::reader::TypeRenameTransform& trt) {
-				io.mapRequired("Types", trt.types);
+		template <> struct MappingTraits<::refactorial::config::FunctionRenameTransform> {
+			static void mapping(IO& io, ::refactorial::config::FunctionRenameTransform& frt) {
+				io.mapRequired("Renames", frt.renames);
 			}
 		};
 
-		template <> struct MappingTraits<::yaml::reader::Transforms> {
-			static void mapping(IO& io, ::yaml::reader::Transforms& t) {
+		template <> struct MappingTraits<::refactorial::config::TypeRenameTransform> {
+			static void mapping(IO& io, ::refactorial::config::TypeRenameTransform& trt) {
+				io.mapRequired("Renames", trt.renames);
+			}
+		};
+
+		template <> struct MappingTraits<::refactorial::config::Transforms> {
+			static void mapping(IO& io, ::refactorial::config::Transforms& t) {
 				io.mapOptional("TypeRename", t.type_rename_transform);
+				io.mapOptional("FunctionRename", t.function_rename_transform);
 			}
 		};
 
-		template <> struct MappingTraits<::yaml::reader::Config> {
-			static void mapping(IO& io, ::yaml::reader::Config& c) {
+		template <> struct MappingTraits<::refactorial::config::Config> {
+			static void mapping(IO& io, ::refactorial::config::Config& c) {
 				io.mapRequired("Transforms", c.transforms);
 			}
 		};

@@ -115,7 +115,7 @@ int main(int argc, const char **argv)
 
     // TODO: Allow passing file to read from as a command line arg
     std::string config_yaml = readFromStream(std::cin);
-    yaml::reader::Config config;
+    refactorial::config::Config config;
     llvm::yaml::Input yin(config_yaml);
     yin >> config;
 
@@ -124,9 +124,11 @@ int main(int argc, const char **argv)
     TransformRegistry::get().config = config;
     TransformRegistry::get().replacements = &replacements;
 
-    // TODO: Add support for only applying replacements to specific files
+    // TODO: Add support for specifying a base path where all files under that path are touched with
+    // replacements. This should allow for not touching system headers (or framework headers etc).
 
     rt.run(new TransformFactory(TransformRegistry::get()["TypeRenameTransform"]));
+    rt.run(new TransformFactory(TransformRegistry::get()["FunctionRenameTransform"]));
 
     stable_deduplicate(replacements);
 

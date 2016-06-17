@@ -25,7 +25,7 @@ public:
 
     void HandleTranslationUnit(ASTContext &C) override {
       Matcher.setCompilerInstance(*this->ci);
-      if (!Matcher.loadConfig(TransformKey, RenameKey)) {
+      if (!Matcher.loadConfig(getTransformConfig(), RenameKey)) {
         return;
       }
       this->TraverseDecl(C.getTranslationUnitDecl());

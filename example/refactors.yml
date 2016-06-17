@@ -1,10 +1,15 @@
 ---
 Transforms:
   TypeRename:
-    Types:
+    Renames:
       - From: class QValueList
         To: QList
       - From: class QString
         To: QSTRING
       - From: class Example
         To: Ample
+
+  FunctionRename:
+    Renames:
+      - From: QPixmap::convertToImage
+        To: toImage
