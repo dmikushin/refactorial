@@ -1,7 +1,17 @@
+### Under Heavy Construction
+
+Non-exclusive list of changes:
+ - Make building on Win32 and Linux work (maybe make an effort to support OS X)
+ - Remove dependencies that can be satisified by LLVM's libs (pcre, boost, yaml-cpp)
+ - Allow renaming types without changing the definition (for example, when upgrading between versions of a dependency)
+ - And more
+
+Note that the README is in a very outdated state and will be updated in the future.
+
 
 # Refactorial
 
-Refactoiral is a Clang-based refactoring tool for C, C++, Objective-C, and Objective-C++. It has a number of nice properties:
+Refactorial is a Clang-based refactoring tool for C, C++, Objective-C, and Objective-C++. It has a number of nice properties:
 
 1.  It runs independent of any IDE
 2.  It refactors C, C++, Objective-C and Objective-C++ programs
