@@ -39,7 +39,7 @@ transform_creator TransformRegistry::operator[](const string &name) const
 {
 	auto iter = m_transforms.find(name);
 	if(iter==m_transforms.end())
-		throw out_of_range(name);
+		llvm::errs() << name << "out of range" << "\n";
 	return iter->second;
 }
 
@@ -49,10 +49,10 @@ private:
 public:
 	TransformAction(transform_creator creator) {tcreator = creator;}
 protected:
-	ASTConsumer *CreateASTConsumer(CompilerInstance &CI, llvm::StringRef) {
-		Transform *xform = tcreator();
+	std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI, llvm::StringRef) {
+		std::unique_ptr<Transform> xform = tcreator();
 		xform->ci = &CI;
-		return xform;
+		return std::move(xform);
 	}
 
 	virtual bool BeginInvocation(CompilerInstance &CI) {

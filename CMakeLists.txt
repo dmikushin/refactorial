@@ -38,7 +38,7 @@ macro(llvm_get_config OUTPUT)
         message(FATAL_ERROR " -- llvm_get_config: failed to execute ${LLVM_CONFIG_EXECUTABLE} ${ARGN} (result: ${__llvm_ok})")
     endif()
     string(STRIP ${OUTPUT} "${${OUTPUT}}")
-    string(REPLACE "\n" "" ${OUTPUT} "${${OUTPUT}}")
+    string(REPLACE "\n" " " ${OUTPUT} "${${OUTPUT}}")
 endmacro()
 
 macro(resolve_library_flags VARIABLE)
@@ -58,7 +58,7 @@ endmacro()
 # kinda hardcoded for my setup...
 find_program(LLVM_CONFIG_EXECUTABLE
     NAMES llvm-config
-    PATHS "~/llvm.install/bin"
+    PATHS "~/llvm.install/bin" "C:/src/llvm/build/bin"
     )
 # check that
 if(${LLVM_CONFIG_EXECUTABLE} MATCHES NOTFOUND)
@@ -73,22 +73,43 @@ endif(${LLVM_CONFIG_EXECUTABLE} MATCHES NOTFOUND)
 #   nm -C -A ~/llvm.install/lib/* | grep -e "[rRtT]\s*llvm::MCContext::~MCContext"
 # note: don't link "clang" which is a shared lib. you'll get doubled symbols
 list(APPEND CLANG_LIBRARIES
-    clangTooling clangEdit clangDriver
-    clangFrontend clangLex clangParse
-    clangAnalysis clangSema clangRewriteCore
-    clangSerialization clangEdit clangAST
-    clangASTMatchers clangBasic
-    )
+  clangTooling
+  clangToolingCore
+  clangDriver
+  clangFrontend
+  clangFrontendTool
+  clangParse
+  clangSema
+  clangEdit
+  clangLex
+  clangAnalysis
+  clangRewrite
+  clangRewriteFrontend
+  clangSerialization
+  clangAST
+  clangASTMatchers
+  clangDynamicASTMatchers
+  clangBasic
+  clangIndex
+  )
 
 llvm_get_config(LLVM_CXXFLAGS "--cxxflags")
 llvm_get_config(LLVM_LIBRARY_DIRS "--libdir")
-llvm_get_config(LLVM_LIBRARIES "--libs" support mcparser)
+llvm_get_config(LLVM_LIBRARIES "--libs" "--system-libs")
+llvm_get_config(LLVM_LDFLAGS "--ldflags")
 string(REPLACE " " ";" LLVM_LIBRARIES "${LLVM_LIBRARIES}")
+
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LLVM_LDFLAGS}")
 
 find_library(PCRE_LIBRARY pcre)
 find_library(PCRECPP_LIBRARY pcrecpp)
 
 add_definitions(${LLVM_CXXFLAGS})
+
+# FIXME: LLVM 3.7.1 adds the wrong flag for Clang. Remove it and add the right one.
+remove_definitions("-Wno-maybe-uninitialized")
+add_definitions("-Wno-uninitialized")
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 link_directories(${LLVM_LIBRARY_DIRS})
 
@@ -97,14 +118,11 @@ add_executable(refactorial
     AugmentedJSONCompilationDatabase.cpp
     Transforms/AccessorsTransform.cpp
     Transforms/ExtractParameterTransform.cpp
-    Transforms/FunctionRenameTransform.cpp
     Transforms/IdentityTransform.cpp
     Transforms/MethodMoveTransform.cpp
-    Transforms/RecordFieldRenameTransform.cpp
-    Transforms/RenameTransforms.h
+    Transforms/NamedDeclMatcher.cpp
+    Transforms/RenameTransform.cpp
     Transforms/Transforms.cpp
-    Transforms/Transforms.h
-    Transforms/TypeRenameTransform.cpp
 )
 
 target_link_libraries(refactorial

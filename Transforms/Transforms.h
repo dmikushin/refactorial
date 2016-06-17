@@ -12,7 +12,6 @@
 #include <clang/Tooling/Refactoring.h>
 
 #include <yaml-cpp/yaml.h>
-#include "yaml-util.h"
 
 class Transform : public clang::ASTConsumer
 {
@@ -34,12 +33,12 @@ protected:
 	clang::SourceLocation findLocAfterSemi(clang::SourceLocation curLoc) {return findLocAfterToken(curLoc, clang::tok::semi);}
 };
 
-template <typename T> Transform* transform_factory()
+template <typename T> std::unique_ptr<Transform> transform_factory()
 {
-	return new T;
+	return std::unique_ptr<T>(new T);
 }
 
-typedef Transform* (*transform_creator)(void);
+typedef std::unique_ptr<Transform> (*transform_creator)(void);
 
 class TransformRegistry
 {
