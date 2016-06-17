@@ -16,6 +16,16 @@ using namespace clang::tooling;
 
 static llvm::cl::OptionCategory optionCategory("Refactorial options");
 
+static llvm::cl::opt<bool> apply_replacements(
+	"apply",
+	llvm::cl::desc("Apply identified replacements."),
+	llvm::cl::Optional);
+
+static llvm::cl::opt<bool> print_replacements(
+	"print",
+	llvm::cl::desc("Print identified replacements."),
+	llvm::cl::Optional);
+
 static llvm::cl::opt<std::string> refactor_specifications(
         "rulespec",
         llvm::cl::desc("file with refactoring information, overrides stdin"),
@@ -120,12 +130,18 @@ int main(int argc, const char **argv)
 
     stable_deduplicate(replacements);
 
-    llvm::outs() << "Replacements collected by the tool:\n";
-    for (const auto& r : replacements) {
-        llvm::outs() << r.toString() << "\n";
-    }
+	if (print_replacements)
+	{
+		llvm::outs() << "Replacements collected by the tool:\n";
+		for (const auto& r : replacements) {
+			llvm::outs() << r.toString() << "\n";
+		}
+	}
 
-    commit_changes(rt, replacements);
+	if (apply_replacements)
+	{
+		commit_changes(rt, replacements);
+	}
 
     return 0;
 }
