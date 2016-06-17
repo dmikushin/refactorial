@@ -1,0 +1,10 @@
+---
+Transforms:
+  TypeRename:
+    Types:
+      - From: class QValueList
+        To: QList
+      - From: class QString
+        To: QSTRING
+      - From: class Example
+        To: Ample
