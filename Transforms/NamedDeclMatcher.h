@@ -2,7 +2,6 @@
 #define RENAME_TRANSFORMS_H
 
 #include <clang/Basic/SourceLocation.h>
-#include <pcrecpp.h>
 
 #include <map>
 #include <set>
@@ -11,10 +10,14 @@
 #include <vector>
 
 namespace clang {
-class CompilerInstance;
-class Decl;
-class NamedDecl;
-class Stmt;
+	class CompilerInstance;
+	class Decl;
+	class NamedDecl;
+	class Stmt;
+}
+
+namespace llvm {
+	class Regex;
 }
 
 class NamedDeclMatcher {
@@ -54,10 +57,10 @@ private:
     int indentLevel;
     std::string indentString;
 
-    std::vector<pcrecpp::RE> ignoreList;
+    std::vector<llvm::Regex> ignoreList;
 
-    typedef std::pair<pcrecpp::RE, std::string> REStringPair;
-    std::vector<REStringPair> renameList;
+    typedef std::pair<llvm::Regex, std::string> RegexStringPair;
+    std::vector<RegexStringPair> renameList;
 
     std::map<const clang::Decl *, std::string> nameMap;
     std::map<std::string, std::string> matchedStringMap;

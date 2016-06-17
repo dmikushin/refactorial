@@ -1,12 +1,14 @@
+#include <yamlreader.h>
+
 #include "NamedDeclMatcher.h"
 #include "Transforms.h"
 
-#include <pcrecpp.h>
 #include <clang/AST/Decl.h>
 #include <clang/AST/Stmt.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Lex/Preprocessor.h>
 #include <clang/Tooling/Refactoring.h>
+#include <llvm/Support/Regex.h>
 #include <llvm/Support/raw_ostream.h>
 
 using namespace clang;
@@ -17,54 +19,67 @@ NamedDeclMatcher::loadConfig(
     const std::string& renameKeyName,
     const std::string& ignoreKeyName)
 {
-    auto S = TransformRegistry::get().config[transformName];
-    if (!S.IsMap()) {
-      llvm::errs() << "Error: Cannot find config entry \"" << transformName
-                   << "\" or entry is not a map\n";
-      return false;
-    }
+	yaml::reader::TypeRenameTransform transform = TransformRegistry::get().config.transforms.type_rename_transform;
 
-    auto IG = S[ignoreKeyName];
+	// TODO: Add ignore support
 
-    if (IG && !IG.IsSequence()) {
-      llvm::errs() << "Error: Config key \"" << ignoreKeyName
-                   << "\" must be a sequence\n";
-      return false;
-    }
+	llvm::outs() << "found type translations" << "\n";
+	for (const yaml::reader::Rename& r : transform.types)
+	{
+		renameList.push_back(RegexStringPair(llvm::Regex(r.from), r.to));
+		llvm::errs() << "from: " << r.from << " to: " << r.to << "\n";
+	}
 
-    for (auto I = IG.begin(), E = IG.end(); I != E; ++I) {
-      if (I->IsScalar()) {
-        auto P = I->as<std::string>();
-        ignoreList.push_back(pcrecpp::RE(P));
-        llvm::errs() << "Ignoring: " << P << "\n";
-      }
-    }
+	return true;
 
-    auto RN = S[renameKeyName];
-    if (!RN.IsSequence()) {
-      llvm::errs() << "\"" << renameKeyName << "\" is not specified or is"
-                   << " not a sequence\n";
-      return false;
-    }
 
-    for (auto I = RN.begin(), E = RN.end(); I != E; ++I) {
-      if (!I->IsMap()) {
-        llvm::errs() << "Error: \"" << renameKeyName
-                     << "\" contains non-map items\n";
-        return false;
-      }
+    // auto S = TransformRegistry::get().config[transformName];
+    // if (!S.IsMap()) {
+    //   llvm::errs() << "Error: Cannot find config entry \"" << transformName
+    //                << "\" or entry is not a map\n";
+    //   return false;
+    // }
 
-      for (auto MI = I->begin(), ME = I->end(); MI != ME; ++MI) {
-        auto F = MI->first.as<std::string>();
-        auto T = MI->second.as<std::string>();
-        pcrecpp::RE re(F);
-        renameList.push_back(REStringPair(re, T));
+    // auto IG = S[ignoreKeyName];
 
-        llvm::errs() << "renames: " << F << " -> " << T << "\n";
-      }
-    }
+    // if (IG && !IG.IsSequence()) {
+    //   llvm::errs() << "Error: Config key \"" << ignoreKeyName
+    //                << "\" must be a sequence\n";
+    //   return false;
+    // }
 
-    return true;
+    // for (auto I = IG.begin(), E = IG.end(); I != E; ++I) {
+    //   if (I->IsScalar()) {
+    //     auto P = I->as<std::string>();
+    //     ignoreList.push_back(llvm::Regex(P));
+    //     llvm::errs() << "Ignoring: " << P << "\n";
+    //   }
+    // }
+
+    // auto RN = S[renameKeyName];
+    // if (!RN.IsSequence()) {
+    //   llvm::errs() << "\"" << renameKeyName << "\" is not specified or is"
+    //                << " not a sequence\n";
+    //   return false;
+    // }
+
+    // for (auto I = RN.begin(), E = RN.end(); I != E; ++I) {
+    //   if (!I->IsMap()) {
+    //     llvm::errs() << "Error: \"" << renameKeyName
+    //                  << "\" contains non-map items\n";
+    //     return false;
+    //   }
+
+    //   for (auto MI = I->begin(), ME = I->end(); MI != ME; ++MI) {
+    //     auto F = MI->first.as<std::string>();
+    //     auto T = MI->second.as<std::string>();
+    //     renameList.push_back(RegexStringPair(F, T));
+
+    //     llvm::errs() << "renames: " << F << " -> " << T << "\n";
+    //   }
+    // }
+
+    // return true;
 }
 
 bool
@@ -94,7 +109,7 @@ NamedDeclMatcher::shouldIgnore(clang::SourceLocation L)
     auto FN = FE->getName();
 
     for (auto I = ignoreList.begin(), E = ignoreList.end(); I != E; ++I) {
-      if (I->FullMatch(FN)) {
+      if (I->match(FN)) {
         return true;
       }
     }
@@ -142,9 +157,11 @@ NamedDeclMatcher::nameMatches(
       QN.insert(KN.size(), " ");
     }
 
+	llvm::SmallVector<llvm::StringRef, 2> matched;
+	llvm::outs() << "candidate: " << QN << "\n";
     for (auto I = renameList.begin(), E = renameList.end(); I != E; ++I) {
-      if (I->first.FullMatch(QN)) {
-        I->first.Extract(I->second, QN, &outNewName);
+      if (I->first.match(QN, &matched)) {
+        outNewName = matched[0];
         nameMap[D] = outNewName;
         return true;
       }
@@ -168,10 +185,10 @@ NamedDeclMatcher::stringMatches(std::string name, std::string &outNewName)
       return false;
     }
 
+	llvm::SmallVector<llvm::StringRef, 2> matched;
     for (auto I = renameList.begin(), E = renameList.end(); I != E; ++I) {
-      if (I->first.FullMatch(name)) {
-        std::string newName;
-        I->first.Extract(I->second, name, &newName);
+	  if (I->first.match(name, &matched)) {
+        std::string newName = matched[0];
         matchedStringMap[name] = newName;
         outNewName = newName;
         return true;

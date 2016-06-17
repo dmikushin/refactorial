@@ -1,4 +1,4 @@
-#include <yaml-cpp/yaml.h>
+#include <yamlreader.h>
 
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <clang/Rewrite/Core/Rewriter.h>
@@ -82,70 +82,125 @@ commit_changes(RefactoringTool &Tool, const std::vector<Replacement> &R) {
   return Rewrite.overwriteChangedFiles() ? 1 : 0;
 }
 
+std::string readFromStream(std::istream& in)
+{
+	std::string ret;
+	char buffer[4096];
+	while (in.read(buffer, sizeof(buffer)))
+	{
+		ret.append(buffer, sizeof(buffer));
+	}
+	ret.append(buffer, in.gcount());
+	return ret;
+}
+
 int main(int argc, const char **argv)
 {
     CommonOptionsParser cmdl(argc, argv, optionCategory, usageText);
 
-    // read refactoring specifications. either read from stdin or file
-    std::vector<YAML::Node> config;
-    if (refactor_specifications.empty()) {
-        llvm::errs() << "falling back to read from stdin\n";
-        config = YAML::LoadAll(std::cin);
-    } else {
-        std::ifstream fin(refactor_specifications.c_str(), std::ifstream::binary);
-        if (fin) {
-            config = YAML::LoadAll(fin);
-        } else {
-            llvm::errs() << "barf: cannot open file '" << refactor_specifications << "'\n";
-            exit(-1);
-        }
-        fin.close();
-    }
+	// // Test output
+	// llvm::outs() << "test yaml generation" << "\n";
+
+	// yaml::reader::TypeRenameTransform t;
+	// t.types.push_back("Q3Variant QVariant");
+	// t.types.push_back("Q3ValueList QList");
+	// t.types.push_back("QCString QByteArray");
+	// t.types.push_back("QString: QSTRING2");
+	// yaml::reader::Transforms transforms;
+	// transforms.type_rename_transform = t;
+	// yaml::reader::Config c;
+	// c.transforms = transforms;
+
+	// llvm::yaml::Output yout(llvm::outs());
+	// yout << c;
+
+	// // Test input
+	// std::string doc(std::istreambuf_iterator<char>(std::cin), {});
+
+	// yaml::reader::Config c2;
+	// llvm::yaml::Input yin(doc);
+	// yin >> c2;
+
+	// yout << c2;
+
+    // // read refactoring specifications. either read from stdin or file
+    // std::vector<YAML::Node> config;
+    // if (refactor_specifications.empty()) {
+    //     llvm::errs() << "falling back to read from stdin\n";
+    //     config = YAML::LoadAll(std::cin);
+    // } else {
+    //     std::ifstream fin(refactor_specifications.c_str(), std::ifstream::binary);
+    //     if (fin) {
+    //         config = YAML::LoadAll(fin);
+    //     } else {
+    //         llvm::errs() << "barf: cannot open file '" << refactor_specifications << "'\n";
+    //         exit(-1);
+    //     }
+    //     fin.close();
+    // }
 
 	RefactoringTool rt(cmdl.getCompilations(), cmdl.getSourcePathList());
-	std::vector<Replacement> replacements;
 
 	IgnoringDiagConsumer ignore;
 	rt.setDiagnosticConsumer(&ignore);
 
-	// iterate over refactoring specification
-	for(const YAML::Node &configSection : config) {
-		TransformRegistry::get().config = YAML::Node();
+	std::string config_yaml = readFromStream(std::cin);
+	yaml::reader::Config config;
+	llvm::yaml::Input yin(config_yaml);
+	yin >> config;
 
-		//figure out which files we need to work on
-		/*
-		std::vector<std::string> inputFiles;
-		if(configSection["Files"])
-			inputFiles = configSection["Files"].as<std::vector<std::string> >();
-		if(!configSection["Transforms"]) {
-			llvm::errs() << "No transforms specified in this configuration section:\n";
-			llvm::errs() << YAML::Dump(configSection) << "\n";
-		}
-		
-		//load up the compilation database
-        if (inputFiles.empty()) {
-            inputFiles = Compilations.getAllFiles();
-            llvm::errs() << "no input files in refactoring yml given. "
-                << "using " << inputFiles.size() << " compile units "
-                << "from compile_commands.json\n";
-        }
-		*/
+	std::vector<Replacement> replacements;
 
+	TransformRegistry::get().config = config;
+	TransformRegistry::get().replacements = &replacements;
 
-		TransformRegistry::get().config = configSection["Transforms"];
-		TransformRegistry::get().replacements = &replacements;
-		
-		//finally, run
-		for(const auto &trans : configSection["Transforms"]) {
-			replacements.clear();
-			std::string transId = trans.first.as<std::string>() + "Transform";
-			llvm::errs() << "Doing a '" << transId << "'\n";
-			if (rt.run(new TransformFactory(TransformRegistry::get()[transId])) == 0) {
-				// TODO check return values
-				stable_deduplicate(replacements);
-				commit_changes(rt, replacements);
-			}
-		}
+	// TODO: Add file support
+
+	rt.run(new TransformFactory(TransformRegistry::get()["TypeRenameTransform"]));
+
+	llvm::outs() << "Replacements collected by the tool:\n";
+	for (auto &r : rt.getReplacements()) {
+		llvm::outs() << r.toString() << "\n";
 	}
+
+	// TODO: Apply replacements
+
+	// // iterate over refactoring specification
+	// for(const YAML::Node &configSection : config) {
+	// 	//figure out which files we need to work on
+	// 	/*
+	// 	std::vector<std::string> inputFiles;
+	// 	if(configSection["Files"])
+	// 		inputFiles = configSection["Files"].as<std::vector<std::string> >();
+	// 	if(!configSection["Transforms"]) {
+	// 		llvm::errs() << "No transforms specified in this configuration section:\n";
+	// 		llvm::errs() << YAML::Dump(configSection) << "\n";
+	// 	}
+		
+	// 	//load up the compilation database
+    //     if (inputFiles.empty()) {
+    //         inputFiles = Compilations.getAllFiles();
+    //         llvm::errs() << "no input files in refactoring yml given. "
+    //             << "using " << inputFiles.size() << " compile units "
+    //             << "from compile_commands.json\n";
+    //     }
+	// 	*/
+
+
+	// 	TransformRegistry::get().config = configSection["Transforms"];
+	// 	TransformRegistry::get().replacements = &replacements;
+		
+	// 	//finally, run
+	// 	for(const auto &trans : configSection["Transforms"]) {
+	// 		replacements.clear();
+	// 		std::string transId = trans.first.as<std::string>() + "Transform";
+	// 		llvm::errs() << "Doing a '" << transId << "'\n";
+	// 		if (rt.run(new TransformFactory(TransformRegistry::get()[transId])) == 0) {
+	// 			// TODO check return values
+	// 			stable_deduplicate(replacements);
+	// 			commit_changes(rt, replacements);
+	// 		}
+	// 	}
+	// }
 	return 0;
 }

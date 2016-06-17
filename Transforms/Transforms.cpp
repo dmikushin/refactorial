@@ -32,6 +32,7 @@ TransformRegistry &TransformRegistry::get()
 
 void TransformRegistry::add(const string &name, transform_creator creator)
 {
+	llvm::outs() << "registered " << name << "\n";
 	m_transforms.insert(pair<string, transform_creator>(name, creator));
 }
 
@@ -39,7 +40,7 @@ transform_creator TransformRegistry::operator[](const string &name) const
 {
 	auto iter = m_transforms.find(name);
 	if(iter==m_transforms.end())
-		llvm::errs() << name << "out of range" << "\n";
+		llvm::errs() << name << " out of range" << "\n";
 	return iter->second;
 }
 

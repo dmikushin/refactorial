@@ -11,7 +11,7 @@
 #include <clang/Lex/Lexer.h>
 #include <clang/Tooling/Refactoring.h>
 
-#include <yaml-cpp/yaml.h>
+#include <yamlreader.h>
 
 class Transform : public clang::ASTConsumer
 {
@@ -45,7 +45,7 @@ class TransformRegistry
  private:
 	std::map<std::string,transform_creator> m_transforms;
  public:
-	YAML::Node config;
+	yaml::reader::Config config;
 	std::map<std::string, std::string> touchedFiles;
 	std::vector<clang::tooling::Replacement> *replacements;
 

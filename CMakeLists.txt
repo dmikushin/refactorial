@@ -25,10 +25,11 @@ PROJECT (Refactorial)
 #     make
 # }}}
 
-# kinda hardcoded by trial-and-error...
-add_definitions("-fno-rtti -Wno-c++11-extensions -Wno-nested-anon-types")
-
-add_definitions("-g")
+if(NOT WIN32)
+  # kinda hardcoded by trial-and-error...
+  add_definitions("-fno-rtti -Wno-c++11-extensions -Wno-nested-anon-types")
+  add_definitions("-g")
+endif()
 
 macro(llvm_get_config OUTPUT)
     execute_process(COMMAND ${LLVM_CONFIG_EXECUTABLE} ${ARGN}
@@ -101,36 +102,47 @@ string(REPLACE " " ";" LLVM_LIBRARIES "${LLVM_LIBRARIES}")
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LLVM_LDFLAGS}")
 
-find_library(PCRE_LIBRARY pcre)
-find_library(PCRECPP_LIBRARY pcrecpp)
-
 add_definitions(${LLVM_CXXFLAGS})
 
-# FIXME: LLVM 3.7.1 adds the wrong flag for Clang. Remove it and add the right one.
-remove_definitions("-Wno-maybe-uninitialized")
-add_definitions("-Wno-uninitialized")
+if(NOT WIN32)
+  # FIXME: LLVM 3.7.1 adds the wrong flag for Clang. Remove it and add the right one.
+  remove_definitions("-Wno-maybe-uninitialized")
+  add_definitions("-Wno-uninitialized")
+endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+if(WIN32)
+  llvm_get_config(LLVM_INCLUDEDIR "--includedir")
+  include_directories(
+	"C:/src/llvm/tools/clang/include"
+	"C:/src/llvm/build/tools/clang/include"
+	${LLVM_INCLUDEDIR}
+	)
+
+  set(ADDITIONAL_LIBRARIES "C:/Program Files (x86)/Microsoft SDKs/Windows/v7.1A/Lib/x64/Version.lib")
+else()
+  set(ADDITIONAL_LIBRARIES "dl" "pthread")
+endif()
+
 link_directories(${LLVM_LIBRARY_DIRS})
 
 add_executable(refactorial
     main.cpp
     AugmentedJSONCompilationDatabase.cpp
-    Transforms/AccessorsTransform.cpp
-    Transforms/ExtractParameterTransform.cpp
-    Transforms/IdentityTransform.cpp
-    Transforms/MethodMoveTransform.cpp
+    # Transforms/AccessorsTransform.cpp
+    # Transforms/ExtractParameterTransform.cpp
+    # Transforms/IdentityTransform.cpp
+    # Transforms/MethodMoveTransform.cpp
     Transforms/NamedDeclMatcher.cpp
     Transforms/RenameTransform.cpp
     Transforms/Transforms.cpp
-)
+	)
 
 target_link_libraries(refactorial
     ${CLANG_LIBRARIES}
     ${LLVM_LIBRARIES}
-    ${PCRE_LIBRARY}
-    ${PCRECPP_LIBRARY}
-    dl pthread yaml-cpp
+    ${ADDITIONAL_LIBRARIES}
     )
 
 # debug crazy system-header-indlude-problems in linked clang:
