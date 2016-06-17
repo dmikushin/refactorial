@@ -31,55 +31,6 @@ NamedDeclMatcher::loadConfig(
 	}
 
 	return true;
-
-
-    // auto S = TransformRegistry::get().config[transformName];
-    // if (!S.IsMap()) {
-    //   llvm::errs() << "Error: Cannot find config entry \"" << transformName
-    //                << "\" or entry is not a map\n";
-    //   return false;
-    // }
-
-    // auto IG = S[ignoreKeyName];
-
-    // if (IG && !IG.IsSequence()) {
-    //   llvm::errs() << "Error: Config key \"" << ignoreKeyName
-    //                << "\" must be a sequence\n";
-    //   return false;
-    // }
-
-    // for (auto I = IG.begin(), E = IG.end(); I != E; ++I) {
-    //   if (I->IsScalar()) {
-    //     auto P = I->as<std::string>();
-    //     ignoreList.push_back(llvm::Regex(P));
-    //     llvm::errs() << "Ignoring: " << P << "\n";
-    //   }
-    // }
-
-    // auto RN = S[renameKeyName];
-    // if (!RN.IsSequence()) {
-    //   llvm::errs() << "\"" << renameKeyName << "\" is not specified or is"
-    //                << " not a sequence\n";
-    //   return false;
-    // }
-
-    // for (auto I = RN.begin(), E = RN.end(); I != E; ++I) {
-    //   if (!I->IsMap()) {
-    //     llvm::errs() << "Error: \"" << renameKeyName
-    //                  << "\" contains non-map items\n";
-    //     return false;
-    //   }
-
-    //   for (auto MI = I->begin(), ME = I->end(); MI != ME; ++MI) {
-    //     auto F = MI->first.as<std::string>();
-    //     auto T = MI->second.as<std::string>();
-    //     renameList.push_back(RegexStringPair(F, T));
-
-    //     llvm::errs() << "renames: " << F << " -> " << T << "\n";
-    //   }
-    // }
-
-    // return true;
 }
 
 bool
@@ -157,11 +108,11 @@ NamedDeclMatcher::nameMatches(
       QN.insert(KN.size(), " ");
     }
 
-	llvm::SmallVector<llvm::StringRef, 2> matched;
-	llvm::outs() << "candidate: " << QN << "\n";
+    llvm::SmallVector<llvm::StringRef, 2> matched;
     for (auto I = renameList.begin(), E = renameList.end(); I != E; ++I) {
       if (I->first.match(QN, &matched)) {
-        outNewName = matched[0];
+        std::string err;
+        outNewName = I->first.sub(I->second, QN, &err);
         nameMap[D] = outNewName;
         return true;
       }

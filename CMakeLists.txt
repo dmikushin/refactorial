@@ -59,7 +59,7 @@ endmacro()
 # kinda hardcoded for my setup...
 find_program(LLVM_CONFIG_EXECUTABLE
     NAMES llvm-config
-    PATHS "~/llvm.install/bin" "C:/src/llvm/build/bin"
+    PATHS "~/llvm.install/bin" "C:/llvm/bin"
     )
 # check that
 if(${LLVM_CONFIG_EXECUTABLE} MATCHES NOTFOUND)
@@ -95,10 +95,28 @@ list(APPEND CLANG_LIBRARIES
   )
 
 llvm_get_config(LLVM_CXXFLAGS "--cxxflags")
+
 llvm_get_config(LLVM_LIBRARY_DIRS "--libdir")
-llvm_get_config(LLVM_LIBRARIES "--libs" "--system-libs")
-llvm_get_config(LLVM_LDFLAGS "--ldflags")
-string(REPLACE " " ";" LLVM_LIBRARIES "${LLVM_LIBRARIES}")
+string(STRIP ${LLVM_LIBRARY_DIRS} LLVM_LIBRARY_DIRS)
+
+llvm_get_config(LLVM_RAW_LIBRARIES "--libs" "--system-libs")
+string(REPLACE "-l" "" LLVM_RAW_LIBRARIES "${LLVM_RAW_LIBRARIES}")
+string(STRIP ${LLVM_RAW_LIBRARIES} LLVM_RAW_LIBRARIES)
+string(REPLACE " " ";" LLVM_RAW_LIBRARIES "${LLVM_RAW_LIBRARIES}")
+
+if(WIN32)
+  # FIXME: llvm-config returns improper flags for Windows in 3.8
+  foreach(l ${LLVM_RAW_LIBRARIES})
+	LIST(APPEND LLVM_LIBRARIES ${l}.lib)
+  endforeach()
+else()
+  set(LLVM_LIBRARIES ${LLVM_RAW_LIBRARIES})
+endif()
+
+if(NOT WIN32)
+  # FIXME: This provides incorrect flags for Windows in 3.8
+  llvm_get_config(LLVM_LDFLAGS "--ldflags")
+endif()
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LLVM_LDFLAGS}")
 
@@ -114,11 +132,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 if(WIN32)
   llvm_get_config(LLVM_INCLUDEDIR "--includedir")
-  include_directories(
-	"C:/src/llvm/tools/clang/include"
-	"C:/src/llvm/build/tools/clang/include"
-	${LLVM_INCLUDEDIR}
-	)
+  include_directories(${LLVM_INCLUDEDIR})
 
   set(ADDITIONAL_LIBRARIES "C:/Program Files (x86)/Microsoft SDKs/Windows/v7.1A/Lib/x64/Version.lib")
 else()
