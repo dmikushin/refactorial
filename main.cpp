@@ -26,11 +26,6 @@ static llvm::cl::opt<bool> print_replacements(
 	llvm::cl::desc("Print identified replacements."),
 	llvm::cl::Optional);
 
-static llvm::cl::opt<std::string> refactor_specifications(
-        "rulespec",
-        llvm::cl::desc("file with refactoring information, overrides stdin"),
-        llvm::cl::Optional);
-
 static const char usageText[] = "";
 
 /// Compare replacements w/o comparing text
@@ -127,6 +122,7 @@ int main(int argc, const char **argv)
     // TODO: Add support for specifying a base path where all files under that path are touched with
     // replacements. This should allow for not touching system headers (or framework headers etc).
 
+	// FIXME: Should be a better way to handle this.
     rt.run(new TransformFactory(TransformRegistry::get()["TypeRenameTransform"]));
     rt.run(new TransformFactory(TransformRegistry::get()["FunctionRenameTransform"]));
     rt.run(new TransformFactory(TransformRegistry::get()["RecordFieldRenameTransform"]));
