@@ -203,12 +203,15 @@ NamedDeclMatcher::renameLocation(clang::SourceLocation L, std::string& N)
         // getLocWithOffset returns the location *past* the token, hence -1
         auto E = LE.getLocWithOffset(-1);
 
-        // TODO: Determine if it's a wrtiable file
+        // TODO: Determine if it's a writable file
 
         // TODO: Determine if the location has already been touched or
         // needs skipping (such as in refactoring API user's code, then
         // the API headers need no changing since later the new API will be
         // in place)
+
+		// FIXME: Why doens't this use the replace API on Transform? Should it? Or does additional
+		// API need to be added?
 
         // llvm::errs() << "rep: " << loc(L) << ", " << loc(E) << "\n";
         // replace(clang::SourceRange(L, E), N, ci->getSourceManager());

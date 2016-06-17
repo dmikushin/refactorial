@@ -52,6 +52,10 @@ class RecordFieldRenameTransform : public NamedDeclVisitor {
 public:
   RecordFieldRenameTransform() : NamedDeclVisitor("RecordFieldRename", "Field") {}
 
+	refactorial::config::TransformConfig getTransformConfig() override {
+		return TransformRegistry::get().config.transforms.record_field_rename_transform;
+	}
+
   const NamedDecl *getEffectiveDecl(const NamedDecl *Decl) override {
     return dyn_cast<FieldDecl>(Decl);
   }

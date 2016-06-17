@@ -129,6 +129,7 @@ int main(int argc, const char **argv)
 
     rt.run(new TransformFactory(TransformRegistry::get()["TypeRenameTransform"]));
     rt.run(new TransformFactory(TransformRegistry::get()["FunctionRenameTransform"]));
+    rt.run(new TransformFactory(TransformRegistry::get()["RecordFieldRenameTransform"]));
 
     stable_deduplicate(replacements);
 

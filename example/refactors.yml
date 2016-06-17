@@ -13,3 +13,8 @@ Transforms:
     Renames:
       - From: QPixmap::convertToImage
         To: toImage
+
+  RecordFieldRename:
+    Renames:
+      - From: Example::_result
+        To: some_other_name_result

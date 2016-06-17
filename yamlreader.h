@@ -21,16 +21,15 @@ namespace refactorial
 			std::vector<Rename> renames;
 		};
 
-		struct FunctionRenameTransform : TransformConfig
-		{};
-
-		struct TypeRenameTransform : TransformConfig
-		{};
+		struct FunctionRenameTransform : TransformConfig {};
+		struct TypeRenameTransform : TransformConfig {};
+		struct RecordFieldRenameTransform : TransformConfig {};
 
 		struct Transforms
 		{
 			TypeRenameTransform type_rename_transform;
 			FunctionRenameTransform function_rename_transform;
+			RecordFieldRenameTransform record_field_rename_transform;
 		};
 
 		struct Config
@@ -65,10 +64,17 @@ namespace llvm
 			}
 		};
 
+		template <> struct MappingTraits<::refactorial::config::RecordFieldRenameTransform> {
+			static void mapping(IO& io, ::refactorial::config::RecordFieldRenameTransform& rfrt) {
+				io.mapRequired("Renames", rfrt.renames);
+			}
+		};
+
 		template <> struct MappingTraits<::refactorial::config::Transforms> {
 			static void mapping(IO& io, ::refactorial::config::Transforms& t) {
 				io.mapOptional("TypeRename", t.type_rename_transform);
 				io.mapOptional("FunctionRename", t.function_rename_transform);
+				io.mapOptional("RecordFieldRename", t.record_field_rename_transform);
 			}
 		};
 
