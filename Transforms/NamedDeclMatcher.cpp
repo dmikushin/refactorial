@@ -17,7 +17,9 @@ NamedDeclMatcher::loadConfig(
     const std::string& renameKeyName,
     const std::string& ignoreKeyName)
 {
-	// TODO: Add ignore support
+	for (const std::string& path : transform.within_paths) {
+		allowedDirectoryList.push_back(llvm::Regex(path + ".*"));
+	}
 
 	llvm::outs() << "found type translations" << "\n";
 	for (const refactorial::config::Rename& r : transform.renames)
@@ -53,15 +55,14 @@ NamedDeclMatcher::shouldIgnore(clang::SourceLocation L)
       }
     }
 
-    auto FN = FE->getName();
-
-    for (auto I = ignoreList.begin(), E = ignoreList.end(); I != E; ++I) {
-      if (I->match(FN)) {
-        return true;
+	std::string absolute_name = refactorial::util::absolutePath(FE->getName());
+    for (auto I = allowedDirectoryList.begin(), E = allowedDirectoryList.end(); I != E; ++I) {
+      if (I->match(absolute_name)) {
+        return false;
       }
     }
 
-    return false;
+    return true;
 }
 
   // if we have a NamedDecl and the fully-qualified name matches

@@ -143,6 +143,7 @@ link_directories(${LLVM_LIBRARY_DIRS})
 
 add_executable(refactorial
     main.cpp
+    util.cpp
     AugmentedJSONCompilationDatabase.cpp
     # Transforms/AccessorsTransform.cpp
     # Transforms/ExtractParameterTransform.cpp

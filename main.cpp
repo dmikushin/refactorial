@@ -1,5 +1,3 @@
-#include <yamlreader.h>
-
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/CommonOptionsParser.h>
@@ -8,6 +6,8 @@
 
 #include <iostream>
 #include <fstream>
+
+#include "yamlreader.h"
 
 using namespace clang;
 using namespace clang::tooling;

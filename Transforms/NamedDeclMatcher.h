@@ -59,7 +59,7 @@ private:
     int indentLevel;
     std::string indentString;
 
-    std::vector<llvm::Regex> ignoreList;
+    std::vector<llvm::Regex> allowedDirectoryList;
 
     typedef std::pair<llvm::Regex, std::string> RegexStringPair;
     std::vector<RegexStringPair> renameList;

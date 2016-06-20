@@ -3,6 +3,8 @@
 
 #include <llvm/Support/YAMLTraits.h>
 
+#include "util.h"
+
 using llvm::yaml::MappingTraits;
 using llvm::yaml::IO;
 
@@ -18,6 +20,7 @@ namespace refactorial
 
 		struct TransformConfig
 		{
+			std::vector<std::string> within_paths;
 			std::vector<Rename> renames;
 		};
 
@@ -39,47 +42,116 @@ namespace refactorial
 	}
 }
 
-LLVM_YAML_IS_SEQUENCE_VECTOR(::refactorial::config::Rename)
+using namespace refactorial::config;
+
+LLVM_YAML_IS_SEQUENCE_VECTOR(Rename)
+LLVM_YAML_IS_SEQUENCE_VECTOR(std::string)
 
 namespace llvm
 {
 	namespace yaml
 	{
-		template <> struct MappingTraits<::refactorial::config::Rename> {
-			static void mapping(IO& io, ::refactorial::config::Rename& r) {
+		template <> struct MappingTraits<Rename> {
+			static void mapping(IO& io, ::Rename& r) {
 				io.mapRequired("From", r.from);
 				io.mapRequired("To", r.to);
 			}
 		};
 
-		template <> struct MappingTraits<::refactorial::config::FunctionRenameTransform> {
-			static void mapping(IO& io, ::refactorial::config::FunctionRenameTransform& frt) {
-				io.mapRequired("Renames", frt.renames);
+		template <> struct MappingTraits<FunctionRenameTransform> {
+			struct NormalizedFunctionRenameTransform {
+				NormalizedFunctionRenameTransform(IO& io) {}
+				NormalizedFunctionRenameTransform(IO&, FunctionRenameTransform& frt)
+					: within_paths(frt.within_paths) {}
+				FunctionRenameTransform denormalize(IO&) {
+					FunctionRenameTransform frt;
+
+					for (const std::string& p : within_paths) {
+						frt.within_paths.push_back(refactorial::util::absolutePath(p));
+					}
+
+					frt.renames = renames;
+					return frt;
+				}
+
+				std::vector<std::string> within_paths;
+				std::vector<Rename> renames;
+			};
+
+			static void mapping(IO& io, FunctionRenameTransform& frt) {
+				MappingNormalization<NormalizedFunctionRenameTransform, FunctionRenameTransform> keys(io, frt);
+
+				io.mapOptional("WithinPaths", keys->within_paths);
+				io.mapRequired("Renames", keys->renames);
 			}
 		};
 
-		template <> struct MappingTraits<::refactorial::config::TypeRenameTransform> {
-			static void mapping(IO& io, ::refactorial::config::TypeRenameTransform& trt) {
-				io.mapRequired("Renames", trt.renames);
+		template <> struct MappingTraits<TypeRenameTransform> {
+			struct NormalizedTypeRenameTransform {
+				NormalizedTypeRenameTransform(IO& io) {}
+				NormalizedTypeRenameTransform(IO&, TypeRenameTransform& trt)
+					: within_paths(trt.within_paths) {}
+				TypeRenameTransform denormalize(IO&) {
+					TypeRenameTransform trt;
+
+					for (const std::string& p : within_paths) {
+						trt.within_paths.push_back(refactorial::util::absolutePath(p));
+					}
+
+					trt.renames = renames;
+					return trt;
+				}
+
+				std::vector<std::string> within_paths;
+				std::vector<Rename> renames;
+			};
+
+			static void mapping(IO& io, TypeRenameTransform& trt) {
+				MappingNormalization<NormalizedTypeRenameTransform, TypeRenameTransform> keys(io, trt);
+
+				io.mapOptional("WithinPaths", keys->within_paths);
+				io.mapRequired("Renames", keys->renames);
 			}
 		};
 
-		template <> struct MappingTraits<::refactorial::config::RecordFieldRenameTransform> {
-			static void mapping(IO& io, ::refactorial::config::RecordFieldRenameTransform& rfrt) {
-				io.mapRequired("Renames", rfrt.renames);
+		template <> struct MappingTraits<RecordFieldRenameTransform> {
+			struct NormalizedRecordFieldRenameTransform {
+				NormalizedRecordFieldRenameTransform(IO& io) {}
+				NormalizedRecordFieldRenameTransform(IO&, RecordFieldRenameTransform& rfrt)
+					: within_paths(rfrt.within_paths) {}
+				RecordFieldRenameTransform denormalize(IO&) {
+					RecordFieldRenameTransform rfrt;
+
+					for (const std::string& p : within_paths) {
+						rfrt.within_paths.push_back(refactorial::util::absolutePath(p));
+					}
+
+					rfrt.renames = renames;
+					return rfrt;
+				}
+
+				std::vector<std::string> within_paths;
+				std::vector<Rename> renames;
+			};
+
+			static void mapping(IO& io, RecordFieldRenameTransform& rfrt) {
+				MappingNormalization<NormalizedRecordFieldRenameTransform, RecordFieldRenameTransform> keys(io, rfrt);
+
+				io.mapOptional("WithinPaths", keys->within_paths);
+				io.mapRequired("Renames", keys->renames);
 			}
 		};
 
-		template <> struct MappingTraits<::refactorial::config::Transforms> {
-			static void mapping(IO& io, ::refactorial::config::Transforms& t) {
+		template <> struct MappingTraits<Transforms> {
+			static void mapping(IO& io, Transforms& t) {
 				io.mapOptional("TypeRename", t.type_rename_transform);
 				io.mapOptional("FunctionRename", t.function_rename_transform);
 				io.mapOptional("RecordFieldRename", t.record_field_rename_transform);
 			}
 		};
 
-		template <> struct MappingTraits<::refactorial::config::Config> {
-			static void mapping(IO& io, ::refactorial::config::Config& c) {
+		template <> struct MappingTraits<Config> {
+			static void mapping(IO& io, Config& c) {
 				io.mapRequired("Transforms", c.transforms);
 			}
 		};

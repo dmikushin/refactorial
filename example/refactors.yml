@@ -1,6 +1,9 @@
 ---
 Transforms:
   TypeRename:
+    WithinPaths:
+      - ..
+
     Renames:
       - From: class QValueList
         To: QList
@@ -10,11 +13,17 @@ Transforms:
         To: Ample
 
   FunctionRename:
+    WithinPaths:
+      - ..
+
     Renames:
       - From: QPixmap::convertToImage
         To: toImage
 
   RecordFieldRename:
+    WithinPaths:
+      - ..
+
     Renames:
       - From: Example::_result
         To: some_other_name_result
