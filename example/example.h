@@ -3,10 +3,10 @@
 
 #include <qobject.h>
 
-class QWidget;
 class QImage;
 class QString;
 class QPixmap;
+class QValueList;
 
 class MyPixmap
 {
@@ -21,7 +21,7 @@ class Example : public QObject
 	Q_OBJECT
 
 public:
-	Example(QWidget* parent);
+	Example(QObject* parent);
 	~Example();
 
 	QImage toImage(const QPixmap& pix);

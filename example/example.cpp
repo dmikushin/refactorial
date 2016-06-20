@@ -7,7 +7,7 @@
 #include "example.h"
 
 //==============================================================================
-Example::Example(QWidget* parent)
+Example::Example(QObject* parent)
 	: QObject(parent),
 	  _result(QString::null)
 {}
