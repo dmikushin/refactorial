@@ -18,7 +18,8 @@ NamedDeclMatcher::loadConfig(
     const std::string& ignoreKeyName)
 {
 	for (const std::string& path : transform.within_paths) {
-		allowedDirectoryList.push_back(llvm::Regex(path + ".*"));
+		std::string regex = llvm::Regex::escape(path);
+		allowedDirectoryList.push_back(llvm::Regex(regex + ".*", llvm::Regex::IgnoreCase));
 	}
 
 	llvm::outs() << "found type translations" << "\n";
