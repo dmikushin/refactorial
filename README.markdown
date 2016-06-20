@@ -8,6 +8,14 @@ Non-exclusive list of changes:
 
 Note that the README is in a very outdated state and will be updated in the future.
 
+### Blocking Issues
+
+ - The _result field initialization in the Example constructor is not changed.
+ - QValueList<QVariant> in the iterator loop is not changed.
+
+
+
+
 
 # Refactorial
 
