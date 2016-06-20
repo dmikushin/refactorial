@@ -22,6 +22,12 @@ QImage Example::toImage(const QPixmap& pix)
 }
 
 //==============================================================================
+QImage Example::toImage(const MyPixmap& pix)
+{
+	return pix.convertToImage();
+}
+
+//==============================================================================
 QString Example::joinTogether(const QValueList<QVariant>& in)
 {
 	_result = "";

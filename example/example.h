@@ -8,6 +8,14 @@ class QImage;
 class QString;
 class QPixmap;
 
+class MyPixmap
+{
+public:
+	QImage convertToImage() {
+		return QImage();
+	}
+}
+
 class Example : public QObject
 {
 	Q_OBJECT
@@ -17,6 +25,7 @@ public:
 	~Example();
 
 	QImage toImage(const QPixmap& pix);
+	QImage toImage(const MyPixmap& pix);
 
 	QString joinTogether(const QValueList<QVariant>& in);
 
