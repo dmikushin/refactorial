@@ -118,15 +118,13 @@ if(NOT WIN32)
   llvm_get_config(LLVM_LDFLAGS "--ldflags")
 endif()
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LLVM_LDFLAGS}")
-
-add_definitions(${LLVM_CXXFLAGS})
-
 if(NOT WIN32)
-  # FIXME: LLVM 3.7.1 adds the wrong flag for Clang. Remove it and add the right one.
-  remove_definitions("-Wno-maybe-uninitialized")
-  add_definitions("-Wno-uninitialized")
+  # FIXME: LLVM adds the wrong flag for Clang. Remove it and add the right one.
+  string(REPLACE "-Wno-maybe-uninitialized" "-Wno-uninitialized" LLVM_CXXFLAGS "${LLVM_CXXFLAGS}")
 endif()
+
+set(CMAKE_CXX_FLAGS "${LLVM_CXXFLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "${LLVM_LDFLAGS}")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -164,40 +162,3 @@ target_link_libraries(refactorial
 #    echo '#include <stdarg.h> \nint main(){return 0;}' | ~/llvm.install/bin/clang -xc -v -
 # but this targets "clang", where the libclang might be different
 #
-
-add_custom_target(all-tests-refactorings)
-
-# great power: can also be outside of this cmake's tree!
-#set(TEST_DIRECTORY $ENV{HOME}/test_project)
-set(TEST_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test2)
-
-file(GLOB ALL_TEST_YAMLS "${TEST_DIRECTORY}/*.yml")
-
-foreach(YAML_FILE ${ALL_TEST_YAMLS})
-
-    get_filename_component(YAML_NAME ${YAML_FILE} NAME_WE)
-
-    # create a local build-dir with compile-commands, create a local branch
-    # (!), call the tool to make the changes, and create a commit
-    add_custom_target(test-refactor-${YAML_NAME}
-        COMMAND mkdir -p build && cd build && cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-        COMMAND git checkout -- .
-        COMMAND git branch -f test-refactor-${YAML_NAME}
-        COMMAND git checkout test-refactor-${YAML_NAME}
-        COMMAND ${CMAKE_BINARY_DIR}/refactorial 
-            -refactor-specification-file=${YAML_FILE}
-            -p=${TEST_DIRECTORY}/build/compile_commands.json --
-            -isystem /usr/include/x86_64-linux-gnu/c++/4.8
-            -isystem /usr/lib/gcc/x86_64-linux-gnu/4.8/include
-        COMMAND git add -u .
-        COMMAND git commit -m "automatic commit: refactorial vs. ${YAML_NAME}"
-        COMMAND make -C build
-        COMMAND git checkout -
-        WORKING_DIRECTORY ${TEST_DIRECTORY}
-        DEPENDS refactorial
-        )
-
-
-    add_dependencies(all-tests-refactorings test-refactor-${YAML_NAME})
-
-endforeach(YAML_FILE)
