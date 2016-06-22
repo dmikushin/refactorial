@@ -14,18 +14,18 @@ public:
 	{
 		static Replacer instance;
 		return instance;
-  }
+	}
 
-  void insert(clang::SourceLocation loc, std::string text, clang::SourceManager& sourceManager);
-  void replace(clang::SourceRange range, std::string text, clang::SourceManager& sourceManager);
-  void replaceText(clang::SourceRange range, std::string text, clang::SourceManager& sourceManager);
+	void insert(clang::SourceLocation loc, std::string text, clang::SourceManager& sourceManager);
+	void replace(clang::SourceRange range, std::string text, clang::SourceManager& sourceManager);
+	void replaceText(clang::SourceRange range, std::string text, clang::SourceManager& sourceManager);
 
 protected:
 	clang::CompilerInstance *ci;
 
 private:
 	Replacer() {}
-  Replacer(const Replacer&) {}
+	Replacer(const Replacer&) {}
 	void operator=(const Replacer&) {}
 };
 

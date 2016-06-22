@@ -147,6 +147,7 @@ add_executable(refactorial
     # Transforms/ExtractParameterTransform.cpp
     # Transforms/IdentityTransform.cpp
     # Transforms/MethodMoveTransform.cpp
+	Transforms/ExplicitConstructorTransform.cpp
     Transforms/NamedDeclMatcher.cpp
     Transforms/RenameTransform.cpp
     Transforms/Transforms.cpp

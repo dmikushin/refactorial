@@ -6,7 +6,6 @@
 class QImage;
 class QString;
 class QPixmap;
-class QValueList;
 
 class MyPixmap
 {
@@ -14,7 +13,7 @@ public:
 	QImage convertToImage() {
 		return QImage();
 	}
-}
+};
 
 class Example : public QObject
 {
@@ -22,6 +21,8 @@ class Example : public QObject
 
 public:
 	Example(QObject* parent);
+	Example(QObject* parent, const char* name);
+	explicit Example(int foo);
 	~Example();
 
 	QImage toImage(const QPixmap& pix);

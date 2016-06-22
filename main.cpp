@@ -26,6 +26,11 @@ static llvm::cl::opt<bool> print_replacements(
 	llvm::cl::desc("Print identified replacements."),
 	llvm::cl::Optional);
 
+static llvm::cl::opt<std::string> specfile_path(
+	"spec",
+	llvm::cl::desc("Refactor specification file path."),
+	llvm::cl::Required);
+
 static const char usageText[] = "";
 
 /// Compare replacements w/o comparing text
@@ -108,8 +113,16 @@ int main(int argc, const char **argv)
     IgnoringDiagConsumer ignore;
     rt.setDiagnosticConsumer(&ignore);
 
-    // TODO: Allow passing file to read from as a command line arg
-    std::string config_yaml = readFromStream(std::cin);
+	std::ifstream spec_stream(specfile_path);
+	if (!spec_stream.is_open())
+	{
+		llvm::errs() << "Unable to open provided spec file path." << "\n";
+		return 1;
+	}
+
+    std::string config_yaml = readFromStream(spec_stream);
+	spec_stream.close();
+
     refactorial::config::Config config;
     llvm::yaml::Input yin(config_yaml);
     yin >> config;
@@ -126,6 +139,7 @@ int main(int argc, const char **argv)
     rt.run(new TransformFactory(TransformRegistry::get()["TypeRenameTransform"]));
     rt.run(new TransformFactory(TransformRegistry::get()["FunctionRenameTransform"]));
     rt.run(new TransformFactory(TransformRegistry::get()["RecordFieldRenameTransform"]));
+	rt.run(new TransformFactory(TransformRegistry::get()["ExplicitConstructorTransform"]));
 
     stable_deduplicate(replacements);
 
