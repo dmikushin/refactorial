@@ -105,7 +105,7 @@ void ExtractParameterTransform::process()
 					{
 						string str = (*VI)->getType().getAsString() + " " + (*VI)->getNameAsString()
 							+ " = " + node["default"].as<string>();
-						insert(insertionLoc, str);
+						Replacer::instance().insert(insertionLoc, str, ci->getSourceManager());
 						if(FN->hasBody())
 							removeDecl(FN->getBody(), *VI);
 						break;
@@ -151,7 +151,7 @@ void ExtractParameterTransform::removeDecl(const Stmt *stmt, const VarDecl *decl
 						}
 					}
 
-					replace(rangeToRemove, " ");
+					Replacer::instance().replace(rangeToRemove, " ", ci->getSourceManager());
 				}
 			}
 		}

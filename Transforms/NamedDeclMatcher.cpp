@@ -1,5 +1,6 @@
 #include "NamedDeclMatcher.h"
 #include "Transforms.h"
+#include "replacer.h"
 
 #include <clang/AST/Decl.h>
 #include <clang/AST/Stmt.h>
@@ -212,14 +213,7 @@ NamedDeclMatcher::renameLocation(clang::SourceLocation L, std::string& N)
         // the API headers need no changing since later the new API will be
         // in place)
 
-		// FIXME: Why doens't this use the replace API on Transform? Should it? Or does additional
-		// API need to be added?
-
-        // llvm::errs() << "rep: " << loc(L) << ", " << loc(E) << "\n";
-        // replace(clang::SourceRange(L, E), N, ci->getSourceManager());
-        auto Range = CharSourceRange(SourceRange(L, E), true);
-        auto Edit = tooling::Replacement(ci->getSourceManager(), Range, N);
-        TransformRegistry::get().replacements->push_back(Edit);
+        Replacer::instance().replace(clang::SourceRange(L, E), N, ci->getSourceManager());
       }
     }
 }

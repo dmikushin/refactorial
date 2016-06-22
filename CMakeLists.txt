@@ -150,6 +150,7 @@ add_executable(refactorial
     Transforms/NamedDeclMatcher.cpp
     Transforms/RenameTransform.cpp
     Transforms/Transforms.cpp
+    Transforms/Replacer.cpp
 	)
 
 target_link_libraries(refactorial

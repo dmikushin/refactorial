@@ -17,16 +17,14 @@ class Transform : public clang::ASTConsumer
 {
 	friend class TransformAction;
 
-protected:
+public:
 	clang::CompilerInstance *ci;
+
+protected:
 
 	virtual refactorial::config::TransformConfig getTransformConfig() {
 		return refactorial::config::TransformConfig();
 	};
-
-	void insert(clang::SourceLocation loc, std::string text);
-	void replace(clang::SourceRange range, std::string text);
-	void replaceText(clang::SourceRange range, std::string text);
 
 	clang::SourceLocation findLocAfterToken(clang::SourceLocation curLoc, clang::tok::TokenKind tok) {
 		return clang::Lexer::findLocationAfterToken(curLoc, tok, ci->getSourceManager(), ci->getLangOpts(), true);
@@ -66,9 +64,7 @@ public:
 	}
 };
 
-#define REGISTER_TRANSFORM(transform)	  \
-	TransformRegistration _transform_registration_ \
-	## transform(#transform, &transform_factory<transform>)
+#define REGISTER_TRANSFORM(transform)	  TransformRegistration _transform_registration_ ## transform(#transform, &transform_factory<transform>)
 
 class TransformFactory : public clang::tooling::FrontendActionFactory {
 private:

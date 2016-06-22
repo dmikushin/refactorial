@@ -140,7 +140,7 @@ void MethodMoveTransform::processCXXRecordDecl(CXXRecordDecl *CRD)
 	auto MFI = ci->getSourceManager().getMainFileID();
 	auto LEOF = ci->getSourceManager().getLocForEndOfFile(MFI);
 
-	insert(LEOF, aggregateSource);
+	Replacer::instance().insert(LEOF, aggregateSource, ci->getSourceManager());
 }
 
 void MethodMoveTransform::collectNamespaceInfo(DeclContext *DC,
@@ -273,7 +273,7 @@ std::string MethodMoveTransform::rewriteMethodInHeader(CXXMethodDecl *M)
 
 	// replace the body with ;
 	SourceRange replaceRange(MTLE, MBE);
-	replace(replaceRange, ";");
+	Replacer::instance().replace(replaceRange, ";", ci->getSourceManager());
 
 	// return the captured source
 	// TODO: re-indent the source

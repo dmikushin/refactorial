@@ -271,14 +271,16 @@ public:
 			const char *opStr = (op->isIncrementOp()) ? " + 1" : " - 1";
 			const Stmt *outmost = getOutmostStmt(op);
 			if (outmost == op) {
-				replace(
+				Replacer::instance().replace(
 					op->getSourceRange(),
-					rv.methods->exprMod(accessPrefix(rv.expr), opStr));
+					rv.methods->exprMod(accessPrefix(rv.expr), opStr),
+					ci->getSourceManager());
 				observed.insert(rv.expr);
 			} else if (op->isPrefix()) {
-				replace(
+				Replacer::instance().replace(
 					op->getSourceRange(),
-					rv.methods->exprModGet(accessPrefix(rv.expr), opStr));
+					rv.methods->exprModGet(accessPrefix(rv.expr), opStr),
+					ci->getSourceManager());
 				observed.insert(rv.expr);
 			} else {
 				llvm::errs()
@@ -328,7 +330,7 @@ public:
 				op->getLHS()->getLocStart(),
 				op->getRHS()->getLocStart());
 
-			replaceText(range, prefix);
+			Replacer::instance().replaceText(range, prefix, ci->getSourceManager());
 			insertAfterToken(op->getLocEnd(), suffix);
 
 			observed.insert(rv.expr);
@@ -341,7 +343,7 @@ public:
 			return true;
 		}
 		if (auto rv = findAccessors(e)) {
-			replace(e->getSourceRange(), rv.methods->exprGet(accessPrefix(e)));
+			Replacer::instance().replace(e->getSourceRange(), rv.methods->exprGet(accessPrefix(e)), ci->getSourceManager());
 		}
 		return true;
 	}
@@ -434,7 +436,7 @@ private:
 			s << " &x) { this->" << name << " = x; }\n";
 
 			s.flush();
-			insert(insertLoc, methods);
+			Replacer::instance().insert(insertLoc, methods, ci->getSourceManager());
 		}
 	}
 
@@ -470,7 +472,7 @@ private:
 	}
 
 	void insertAfterToken(SourceLocation loc, std::string text) {
-		insert(getLocAfter(loc), text);
+		Replacer::instance().insert(getLocAfter(loc), text, ci->getSourceManager());
 	}
 
 	SourceLocation getLocAfter(SourceLocation loc) {
