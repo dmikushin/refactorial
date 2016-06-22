@@ -1,5 +1,5 @@
-#include "replacer.h"
-#include "transforms.h"
+#include "Replacer.h"
+#include "Transforms.h"
 
 using namespace clang;
 using namespace clang::tooling;
