@@ -8,9 +8,7 @@ Transforms:
       - From: class QValueList
         To: QList
       - From: class QString
-        To: QSTRING
-      - From: class Example
-        To: Ample
+        To: LongerQStringName
 
   FunctionRename:
     WithinPaths:
@@ -27,3 +25,7 @@ Transforms:
     Renames:
       - From: Example::_result
         To: some_other_name_result
+
+  ExplicitConstructor:
+    WithinPaths:
+      - ..

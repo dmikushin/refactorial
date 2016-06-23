@@ -3,6 +3,7 @@
 #include <clang/Lex/Preprocessor.h>
 
 #include "Replacer.h"
+#include "yamlreader.h"
 
 using namespace clang::ast_matchers;
 
@@ -12,7 +13,50 @@ REGISTER_TRANSFORM(ExplicitConstructorTransform);
 class ConstructorHandler : public MatchFinder::MatchCallback
 {
 public:
-	ConstructorHandler(clang::CompilerInstance* ci) : compilerInstance(ci) {}
+	ConstructorHandler(clang::CompilerInstance* ci)
+	  : compilerInstance(ci)
+	{
+		config = TransformRegistry::get().config.transforms.explicit_constructor_transform;
+
+		// FIXME: This is also copied largely from NamedDeclMatcher. Unify them as much as possible.
+		for (const std::string& path : config.within_paths) {
+			std::string regex = llvm::Regex::escape(path);
+			allowedDirectoryList.push_back(llvm::Regex(regex + ".*", llvm::Regex::IgnoreCase));
+		}
+	}
+
+	bool shouldIgnore(clang::SourceLocation L) {
+		// FIXME: This is duped from NamedDeclMatcher. Unify them.
+		if (!L.isValid()) {
+			return true;
+		}
+
+		clang::SourceManager &SM = compilerInstance->getSourceManager();
+		clang::FullSourceLoc FSL(L, SM);
+		const clang::FileEntry *FE = SM.getFileEntryForID(FSL.getFileID());
+		if (!FE) {
+			// attempt to get the spelling location
+			auto SL = SM.getSpellingLoc(L);
+			if (!SL.isValid()) {
+				return true;
+			}
+
+			clang::FullSourceLoc FSL2(SL, SM);
+			FE = SM.getFileEntryForID(FSL2.getFileID());
+			if (!FE) {
+				return true;
+			}
+		}
+
+		std::string absolute_name = refactorial::util::absolutePath(FE->getName());
+		for (auto I = allowedDirectoryList.begin(), E = allowedDirectoryList.end(); I != E; ++I) {
+			if (I->match(absolute_name)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 
 	virtual void run(const MatchFinder::MatchResult& result) {
 		if (const clang::CXXConstructorDecl* ctor = result.Nodes.getNodeAs<clang::CXXConstructorDecl>("ctor")) {
@@ -20,38 +64,28 @@ public:
 
 			// Determine if source location is within accepted paths.
 			clang::SourceLocation loc = ctor->getLocation();
+			if (shouldIgnore(loc)) {
+				return;
+			}
+
 			clang::FullSourceLoc src_loc(loc, *src_manager);
 
-			const clang::FileEntry* entry = src_manager->getFileEntryForID(src_loc.getFileID());
-			std::string absolute_name = refactorial::util::absolutePath(entry->getName());
+			llvm::outs() << "ctor: " << ctor->getQualifiedNameAsString() << "\n";
+			llvm::StringRef s = clang::Lexer::getSourceText(clang::CharSourceRange::getTokenRange(ctor->getSourceRange()), *src_manager, clang::LangOptions(), 0);
 
-			// TODO: Factor this out along with the NamedDeclMatcher allowed dir logic into common util fn.
-			if (llvm::StringRef(absolute_name).startswith(llvm::StringRef("/src/refactorial")))
+			llvm::Regex explicit_regex("^explicit.*$", llvm::Regex::IgnoreCase);
+			if (!explicit_regex.match(s))
 			{
-				llvm::outs() << "ctor: " << ctor->getQualifiedNameAsString() << "\n";
-				llvm::StringRef s = clang::Lexer::getSourceText(clang::CharSourceRange::getTokenRange(ctor->getSourceRange()), *src_manager, clang::LangOptions(), 0);
-				llvm::outs() << s << " | " << absolute_name << "\n";
-
-				llvm::Regex explicit_regex("^explicit.*$", llvm::Regex::IgnoreCase);
-				if (!explicit_regex.match(s))
-				{
-					// FIXME: Seems like this should just be part of the Replacer. Rip out the logic from
-					// NamedDeclMatcher as it appears to handle macros etc.
-					clang::Preprocessor& preprocessor = compilerInstance->getPreprocessor();
-					clang::SourceLocation loc_end = preprocessor.getLocForEndOfToken(loc);
-					if (loc_end.isValid())
-					{
-						clang::SourceLocation end = loc_end.getLocWithOffset(-1);
-						llvm::Twine replacement_text = "explicit " + s;
-						Replacer::instance().replace(clang::SourceRange(loc, end), replacement_text.str(), *src_manager);
-					}
-				}
+				llvm::Twine replacement_text = "explicit " + s;
+				Replacer::instance().replace(ctor->getSourceRange(), replacement_text.str(), *src_manager);
 			}
 		}
 	}
 
 private:
 	clang::CompilerInstance* compilerInstance;
+	refactorial::config::ExplicitConstructorTransformConfig config;
+	std::vector<llvm::Regex> allowedDirectoryList;
 };
 
 //==============================================================================

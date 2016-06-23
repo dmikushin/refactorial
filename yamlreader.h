@@ -18,6 +18,13 @@ namespace refactorial
 			std::string to;
 		};
 
+		// FIXME: Naming is kind of inconsistent. Come up with better names to avoid conflicts with
+		// the actual transform classes.
+		struct ExplicitConstructorTransformConfig
+		{
+			std::vector<std::string> within_paths;
+		};
+
 		struct TransformConfig
 		{
 			std::vector<std::string> within_paths;
@@ -33,6 +40,7 @@ namespace refactorial
 			TypeRenameTransform type_rename_transform;
 			FunctionRenameTransform function_rename_transform;
 			RecordFieldRenameTransform record_field_rename_transform;
+			ExplicitConstructorTransformConfig explicit_constructor_transform;
 		};
 
 		struct Config
@@ -55,6 +63,31 @@ namespace llvm
 			static void mapping(IO& io, ::Rename& r) {
 				io.mapRequired("From", r.from);
 				io.mapRequired("To", r.to);
+			}
+		};
+
+		template <> struct MappingTraits<ExplicitConstructorTransformConfig> {
+			struct NormalizedExplicitConstructorTransformConfig {
+				NormalizedExplicitConstructorTransformConfig(IO& io) {}
+				NormalizedExplicitConstructorTransformConfig(IO&, ExplicitConstructorTransformConfig& ect)
+					: within_paths(ect.within_paths) {}
+				ExplicitConstructorTransformConfig denormalize(IO&) {
+					ExplicitConstructorTransformConfig ect;
+
+					for (const std::string& p : within_paths) {
+						ect.within_paths.push_back(refactorial::util::absolutePath(p));
+					}
+
+					return ect;
+				}
+
+				std::vector<std::string> within_paths;
+			};
+
+			static void mapping(IO& io, ExplicitConstructorTransformConfig& ect) {
+				MappingNormalization<NormalizedExplicitConstructorTransformConfig, ExplicitConstructorTransformConfig> keys(io, ect);
+
+				io.mapOptional("WithinPaths", keys->within_paths);
 			}
 		};
 
@@ -147,6 +180,7 @@ namespace llvm
 				io.mapOptional("TypeRename", t.type_rename_transform);
 				io.mapOptional("FunctionRename", t.function_rename_transform);
 				io.mapOptional("RecordFieldRename", t.record_field_rename_transform);
+				io.mapOptional("ExplicitConstructor", t.explicit_constructor_transform);
 			}
 		};
 
