@@ -13,17 +13,10 @@
 using namespace clang;
 
 bool
-NamedDeclMatcher::loadConfig(
-    const refactorial::config::TransformConfig& transform,
-    const std::string& renameKeyName,
-    const std::string& ignoreKeyName)
+NamedDeclMatcher::loadConfig(refactorial::config::RenameConfig* transform)
 {
-	for (const std::string& path : transform.within_paths) {
-		addAllowedPath(path);
-	}
-
 	llvm::outs() << "found type translations" << "\n";
-	for (const refactorial::config::Rename& r : transform.renames)
+	for (const refactorial::config::Rename& r : transform->renames)
 	{
 		renameList.push_back(RegexStringPair(llvm::Regex(r.from), r.to));
 		llvm::errs() << "from: " << r.from << " to: " << r.to << "\n";

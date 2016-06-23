@@ -9,9 +9,12 @@ using namespace clang;
 using namespace clang::tooling;
 using namespace std;
 
-// FIXME: This isn't actually a common base. Should it be? If it should, unify. This should be pure virtual.
-refactorial::config::TransformConfig Transform::getTransformConfig() {
-	return refactorial::config::TransformConfig();
+void Transform::init()
+{
+	refactorial::config::TransformConfig* config = getTransformConfig();
+	for (const std::string& path : config->within_paths) {
+		addAllowedPath(path);
+	}
 }
 
 clang::SourceLocation Transform::findLocAfterToken(clang::SourceLocation curLoc, clang::tok::TokenKind tok) {
@@ -85,10 +88,9 @@ transform_creator TransformRegistry::operator[](const string &name) const
 }
 
 class TransformAction : public ASTFrontendAction {
-private:
-	transform_creator tcreator;
 public:
 	TransformAction(transform_creator creator) {tcreator = creator;}
+
 protected:
 	std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI, llvm::StringRef) {
 		std::unique_ptr<Transform> xform = tcreator();
@@ -96,10 +98,8 @@ protected:
 		return std::move(xform);
 	}
 
-	virtual bool BeginInvocation(CompilerInstance &CI) {
-		// CI.getHeaderSearchOpts().AddPath("/usr/local/lib/clang/3.2/include", frontend::System, false, false, false);
-		return true;
-	}
+private:
+	transform_creator tcreator;
 };
 
 TransformFactory::TransformFactory(transform_creator creator) {

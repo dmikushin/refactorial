@@ -3,7 +3,6 @@
 #include <clang/Lex/Preprocessor.h>
 
 #include "Replacer.h"
-#include "yamlreader.h"
 
 using namespace clang::ast_matchers;
 
@@ -50,10 +49,7 @@ private:
 //==============================================================================
 void ExplicitConstructorTransform::HandleTranslationUnit(clang::ASTContext& c)
 {
-	refactorial::config::ExplicitConstructorTransformConfig config = TransformRegistry::get().config.transforms.explicit_constructor_transform;
-	for (const std::string& path : config.within_paths) {
-		addAllowedPath(path);
-	}
+	init();
 
 	ConstructorHandler HandlerForConstructor(this);
 
@@ -61,4 +57,10 @@ void ExplicitConstructorTransform::HandleTranslationUnit(clang::ASTContext& c)
 	finder.addMatcher(cxxConstructorDecl(hasParent(cxxRecordDecl())).bind("ctor"), &HandlerForConstructor);
 
 	finder.matchAST(c);
+}
+
+//==============================================================================
+refactorial::config::TransformConfig* ExplicitConstructorTransform::getTransformConfig()
+{
+	return &(TransformRegistry::get().config.transforms.explicit_constructor_transform);
 }

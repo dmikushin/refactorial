@@ -15,10 +15,8 @@
 
 class Transform : public clang::ASTConsumer
 {
-	friend class TransformAction;
-
 public:
-	virtual refactorial::config::TransformConfig getTransformConfig();
+	virtual refactorial::config::TransformConfig* getTransformConfig() = 0;
 
 	clang::SourceLocation findLocAfterToken(clang::SourceLocation curLoc, clang::tok::TokenKind tok);
 	clang::SourceLocation getLocForEndOfToken(clang::SourceLocation curLoc);
@@ -28,6 +26,9 @@ public:
 	bool canChangeLocation(const clang::SourceLocation& loc);
 
 	clang::CompilerInstance *ci;
+
+protected:
+	virtual void init();
 
 private:
 	std::vector<llvm::Regex> allowedDirectoryList;

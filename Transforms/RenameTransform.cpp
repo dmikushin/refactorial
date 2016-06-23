@@ -9,10 +9,12 @@ using namespace clang;
 
 class TypeRenameTransform : public NamedDeclVisitor {
 public:
-  TypeRenameTransform() : NamedDeclVisitor("TypeRename", "Types") {}
+  TypeRenameTransform() : NamedDeclVisitor() {
+	  init();
+  }
 
-	refactorial::config::TransformConfig getTransformConfig() override {
-		return TransformRegistry::get().config.transforms.type_rename_transform;
+	refactorial::config::TransformConfig* getTransformConfig() override {
+		return &(TransformRegistry::get().config.transforms.type_rename_transform);
 	}
 
   const NamedDecl *getEffectiveDecl(const NamedDecl *Decl) override {
@@ -30,10 +32,12 @@ public:
 
 class FunctionRenameTransform : public NamedDeclVisitor {
 public:
-  FunctionRenameTransform() : NamedDeclVisitor("FunctionRename", "Functions") {}
+  FunctionRenameTransform() : NamedDeclVisitor() {
+	  init();
+  }
 
-	refactorial::config::TransformConfig getTransformConfig() override {
-		return TransformRegistry::get().config.transforms.function_rename_transform;
+	refactorial::config::TransformConfig* getTransformConfig() override {
+		return &(TransformRegistry::get().config.transforms.function_rename_transform);
 	}
 
   const NamedDecl *getEffectiveDecl(const NamedDecl *Decl) override {
@@ -50,10 +54,12 @@ public:
 
 class RecordFieldRenameTransform : public NamedDeclVisitor {
 public:
-  RecordFieldRenameTransform() : NamedDeclVisitor("RecordFieldRename", "Field") {}
+  RecordFieldRenameTransform() : NamedDeclVisitor() {
+	  init();
+  }
 
-	refactorial::config::TransformConfig getTransformConfig() override {
-		return TransformRegistry::get().config.transforms.record_field_rename_transform;
+	refactorial::config::TransformConfig* getTransformConfig() override {
+		return &(TransformRegistry::get().config.transforms.record_field_rename_transform);
 	}
 
   const NamedDecl *getEffectiveDecl(const NamedDecl *Decl) override {

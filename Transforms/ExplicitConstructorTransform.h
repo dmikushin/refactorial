@@ -6,4 +6,7 @@ class ExplicitConstructorTransform : public Transform
 {
 public:
 	void HandleTranslationUnit(clang::ASTContext& c) override;
+
+protected:
+	refactorial::config::TransformConfig* getTransformConfig() override;
 };

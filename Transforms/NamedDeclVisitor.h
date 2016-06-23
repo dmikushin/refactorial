@@ -10,23 +10,14 @@ using namespace clang;
 // NamedDeclFindingASTVisitor recursively visits each AST node to find the
 // symbol underneath the cursor.
 namespace {
-class NamedDeclVisitor :
-    public NamedDeclMatcher,
-    public RecursiveASTVisitor<NamedDeclVisitor> {
-private:
-  std::string TransformKey;
-  std::string RenameKey;
-
+class NamedDeclVisitor : public NamedDeclMatcher, public RecursiveASTVisitor<NamedDeclVisitor> {
 public:
-    NamedDeclVisitor(const char *TransformKey, const char *RenameKey)
-      : TransformKey(TransformKey), RenameKey(RenameKey)
-    {}
-
     void HandleTranslationUnit(ASTContext &C) override {
-      if (!loadConfig(getTransformConfig(), RenameKey)) {
-        return;
-      }
-      this->TraverseDecl(C.getTranslationUnitDecl());
+		refactorial::config::RenameConfig* config = static_cast<refactorial::config::RenameConfig*>(getTransformConfig());
+		if (!loadConfig(config)) {
+			return;
+		}
+		this->TraverseDecl(C.getTranslationUnitDecl());
     }
 
   // Declaration visitors:

@@ -12,34 +12,33 @@ namespace refactorial
 {
 	namespace config
 	{
+		struct TransformConfig
+		{
+			std::vector<std::string> within_paths;
+		};
+
+		struct ExplicitConstructorTransformConfig : TransformConfig {};
+
 		struct Rename
 		{
 			std::string from;
 			std::string to;
 		};
 
-		// FIXME: Naming is kind of inconsistent. Come up with better names to avoid conflicts with
-		// the actual transform classes.
-		struct ExplicitConstructorTransformConfig
+		struct RenameConfig : TransformConfig
 		{
-			std::vector<std::string> within_paths;
-		};
-
-		struct TransformConfig
-		{
-			std::vector<std::string> within_paths;
 			std::vector<Rename> renames;
 		};
 
-		struct FunctionRenameTransform : TransformConfig {};
-		struct TypeRenameTransform : TransformConfig {};
-		struct RecordFieldRenameTransform : TransformConfig {};
+		struct FunctionRenameTransformConfig : RenameConfig {};
+		struct TypeRenameTransformConfig : RenameConfig {};
+		struct RecordFieldRenameTransformConfig : RenameConfig {};
 
 		struct Transforms
 		{
-			TypeRenameTransform type_rename_transform;
-			FunctionRenameTransform function_rename_transform;
-			RecordFieldRenameTransform record_field_rename_transform;
+			TypeRenameTransformConfig type_rename_transform;
+			FunctionRenameTransformConfig function_rename_transform;
+			RecordFieldRenameTransformConfig record_field_rename_transform;
 			ExplicitConstructorTransformConfig explicit_constructor_transform;
 		};
 
@@ -91,13 +90,13 @@ namespace llvm
 			}
 		};
 
-		template <> struct MappingTraits<FunctionRenameTransform> {
-			struct NormalizedFunctionRenameTransform {
-				NormalizedFunctionRenameTransform(IO& io) {}
-				NormalizedFunctionRenameTransform(IO&, FunctionRenameTransform& frt)
+		template <> struct MappingTraits<FunctionRenameTransformConfig> {
+			struct NormalizedFunctionRenameTransformConfig {
+				NormalizedFunctionRenameTransformConfig(IO& io) {}
+				NormalizedFunctionRenameTransformConfig(IO&, FunctionRenameTransformConfig& frt)
 					: within_paths(frt.within_paths) {}
-				FunctionRenameTransform denormalize(IO&) {
-					FunctionRenameTransform frt;
+				FunctionRenameTransformConfig denormalize(IO&) {
+					FunctionRenameTransformConfig frt;
 
 					for (const std::string& p : within_paths) {
 						frt.within_paths.push_back(refactorial::util::absolutePath(p));
@@ -111,21 +110,21 @@ namespace llvm
 				std::vector<Rename> renames;
 			};
 
-			static void mapping(IO& io, FunctionRenameTransform& frt) {
-				MappingNormalization<NormalizedFunctionRenameTransform, FunctionRenameTransform> keys(io, frt);
+			static void mapping(IO& io, FunctionRenameTransformConfig& frt) {
+				MappingNormalization<NormalizedFunctionRenameTransformConfig, FunctionRenameTransformConfig> keys(io, frt);
 
 				io.mapOptional("WithinPaths", keys->within_paths);
 				io.mapRequired("Renames", keys->renames);
 			}
 		};
 
-		template <> struct MappingTraits<TypeRenameTransform> {
-			struct NormalizedTypeRenameTransform {
-				NormalizedTypeRenameTransform(IO& io) {}
-				NormalizedTypeRenameTransform(IO&, TypeRenameTransform& trt)
+		template <> struct MappingTraits<TypeRenameTransformConfig> {
+			struct NormalizedTypeRenameTransformConfig {
+				NormalizedTypeRenameTransformConfig(IO& io) {}
+				NormalizedTypeRenameTransformConfig(IO&, TypeRenameTransformConfig& trt)
 					: within_paths(trt.within_paths) {}
-				TypeRenameTransform denormalize(IO&) {
-					TypeRenameTransform trt;
+				TypeRenameTransformConfig denormalize(IO&) {
+					TypeRenameTransformConfig trt;
 
 					for (const std::string& p : within_paths) {
 						trt.within_paths.push_back(refactorial::util::absolutePath(p));
@@ -139,21 +138,21 @@ namespace llvm
 				std::vector<Rename> renames;
 			};
 
-			static void mapping(IO& io, TypeRenameTransform& trt) {
-				MappingNormalization<NormalizedTypeRenameTransform, TypeRenameTransform> keys(io, trt);
+			static void mapping(IO& io, TypeRenameTransformConfig& trt) {
+				MappingNormalization<NormalizedTypeRenameTransformConfig, TypeRenameTransformConfig> keys(io, trt);
 
 				io.mapOptional("WithinPaths", keys->within_paths);
 				io.mapRequired("Renames", keys->renames);
 			}
 		};
 
-		template <> struct MappingTraits<RecordFieldRenameTransform> {
-			struct NormalizedRecordFieldRenameTransform {
-				NormalizedRecordFieldRenameTransform(IO& io) {}
-				NormalizedRecordFieldRenameTransform(IO&, RecordFieldRenameTransform& rfrt)
+		template <> struct MappingTraits<RecordFieldRenameTransformConfig> {
+			struct NormalizedRecordFieldRenameTransformConfig {
+				NormalizedRecordFieldRenameTransformConfig(IO& io) {}
+				NormalizedRecordFieldRenameTransformConfig(IO&, RecordFieldRenameTransformConfig& rfrt)
 					: within_paths(rfrt.within_paths) {}
-				RecordFieldRenameTransform denormalize(IO&) {
-					RecordFieldRenameTransform rfrt;
+				RecordFieldRenameTransformConfig denormalize(IO&) {
+					RecordFieldRenameTransformConfig rfrt;
 
 					for (const std::string& p : within_paths) {
 						rfrt.within_paths.push_back(refactorial::util::absolutePath(p));
@@ -167,8 +166,8 @@ namespace llvm
 				std::vector<Rename> renames;
 			};
 
-			static void mapping(IO& io, RecordFieldRenameTransform& rfrt) {
-				MappingNormalization<NormalizedRecordFieldRenameTransform, RecordFieldRenameTransform> keys(io, rfrt);
+			static void mapping(IO& io, RecordFieldRenameTransformConfig& rfrt) {
+				MappingNormalization<NormalizedRecordFieldRenameTransformConfig, RecordFieldRenameTransformConfig> keys(io, rfrt);
 
 				io.mapOptional("WithinPaths", keys->within_paths);
 				io.mapRequired("Renames", keys->renames);
