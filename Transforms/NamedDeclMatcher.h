@@ -1,6 +1,8 @@
 #ifndef RENAME_TRANSFORMS_H
 #define RENAME_TRANSFORMS_H
 
+#include "Transforms.h"
+
 #include <clang/Basic/SourceLocation.h>
 
 #include <map>
@@ -22,14 +24,12 @@ namespace llvm {
 	class Regex;
 }
 
-class NamedDeclMatcher {
+class NamedDeclMatcher : public Transform {
 public:
     bool loadConfig(
         const refactorial::config::TransformConfig& transform,
         const std::string& renameKeyName,
         const std::string& ignoreKeyName = "Ignore");
-
-    bool shouldIgnore(clang::SourceLocation L);
 
     bool nameMatches(
         const clang::NamedDecl *decl,
@@ -49,17 +49,9 @@ public:
     std::string loc(clang::SourceLocation L);
     std::string range(clang::SourceRange R);
 
-    void setCompilerInstance(clang::CompilerInstance &ci) {
-        this->ci = &ci;
-    }
-
 private:
-    clang::CompilerInstance *ci;
-
     int indentLevel;
     std::string indentString;
-
-    std::vector<llvm::Regex> allowedDirectoryList;
 
     typedef std::pair<llvm::Regex, std::string> RegexStringPair;
     std::vector<RegexStringPair> renameList;

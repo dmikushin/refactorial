@@ -19,8 +19,7 @@ NamedDeclMatcher::loadConfig(
     const std::string& ignoreKeyName)
 {
 	for (const std::string& path : transform.within_paths) {
-		std::string regex = llvm::Regex::escape(path);
-		allowedDirectoryList.push_back(llvm::Regex(regex + ".*", llvm::Regex::IgnoreCase));
+		addAllowedPath(path);
 	}
 
 	llvm::outs() << "found type translations" << "\n";
@@ -31,40 +30,6 @@ NamedDeclMatcher::loadConfig(
 	}
 
 	return true;
-}
-
-bool
-NamedDeclMatcher::shouldIgnore(clang::SourceLocation L)
-{
-    if (!L.isValid()) {
-      return true;
-    }
-
-    clang::SourceManager &SM = ci->getSourceManager();
-    clang::FullSourceLoc FSL(L, SM);
-    const clang::FileEntry *FE = SM.getFileEntryForID(FSL.getFileID());
-    if (!FE) {
-      // attempt to get the spelling location
-      auto SL = SM.getSpellingLoc(L);
-      if (!SL.isValid()) {
-        return true;
-      }
-
-      clang::FullSourceLoc FSL2(SL, SM);
-      FE = SM.getFileEntryForID(FSL2.getFileID());
-      if (!FE) {
-        return true;
-      }
-    }
-
-	std::string absolute_name = refactorial::util::absolutePath(FE->getName());
-    for (auto I = allowedDirectoryList.begin(), E = allowedDirectoryList.end(); I != E; ++I) {
-      if (I->match(absolute_name)) {
-        return false;
-      }
-    }
-
-    return true;
 }
 
   // if we have a NamedDecl and the fully-qualified name matches
@@ -195,7 +160,7 @@ NamedDeclMatcher::renameLocation(clang::SourceLocation L, std::string& N)
         }
       }
 
-      if (shouldIgnore(L)) {
+      if (!canChangeLocation(L)) {
         return;
       }
 

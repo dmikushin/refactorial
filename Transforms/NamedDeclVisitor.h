@@ -11,12 +11,11 @@ using namespace clang;
 // symbol underneath the cursor.
 namespace {
 class NamedDeclVisitor :
-    public Transform,
+    public NamedDeclMatcher,
     public RecursiveASTVisitor<NamedDeclVisitor> {
 private:
   std::string TransformKey;
   std::string RenameKey;
-  NamedDeclMatcher Matcher;
 
 public:
     NamedDeclVisitor(const char *TransformKey, const char *RenameKey)
@@ -24,8 +23,7 @@ public:
     {}
 
     void HandleTranslationUnit(ASTContext &C) override {
-      Matcher.setCompilerInstance(*this->ci);
-      if (!Matcher.loadConfig(getTransformConfig(), RenameKey)) {
+      if (!loadConfig(getTransformConfig(), RenameKey)) {
         return;
       }
       this->TraverseDecl(C.getTranslationUnitDecl());
@@ -173,8 +171,8 @@ private:
                  SourceLocation End) {
     std::string NewName;
     const NamedDecl *ED = this->getEffectiveDecl(Decl);
-    if (ED && Matcher.nameMatches(ED, NewName, false)) {
-      Matcher.renameLocation(Start, NewName);
+    if (ED && nameMatches(ED, NewName, false)) {
+      renameLocation(Start, NewName);
     }
     return true;
   }

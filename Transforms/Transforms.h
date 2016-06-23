@@ -18,21 +18,19 @@ class Transform : public clang::ASTConsumer
 	friend class TransformAction;
 
 public:
+	virtual refactorial::config::TransformConfig getTransformConfig();
+
+	clang::SourceLocation findLocAfterToken(clang::SourceLocation curLoc, clang::tok::TokenKind tok);
+	clang::SourceLocation getLocForEndOfToken(clang::SourceLocation curLoc);
+	clang::SourceLocation findLocAfterSemi(clang::SourceLocation curLoc);
+
+	void addAllowedPath(const std::string& path);
+	bool canChangeLocation(const clang::SourceLocation& loc);
+
 	clang::CompilerInstance *ci;
 
-protected:
-
-	virtual refactorial::config::TransformConfig getTransformConfig() {
-		return refactorial::config::TransformConfig();
-	};
-
-	clang::SourceLocation findLocAfterToken(clang::SourceLocation curLoc, clang::tok::TokenKind tok) {
-		return clang::Lexer::findLocationAfterToken(curLoc, tok, ci->getSourceManager(), ci->getLangOpts(), true);
-	}
-	clang::SourceLocation getLocForEndOfToken(clang::SourceLocation curLoc) {
-		return clang::Lexer::getLocForEndOfToken(curLoc, 0, ci->getSourceManager(), ci->getLangOpts());
-	}
-	clang::SourceLocation findLocAfterSemi(clang::SourceLocation curLoc) {return findLocAfterToken(curLoc, clang::tok::semi);}
+private:
+	std::vector<llvm::Regex> allowedDirectoryList;
 };
 
 template <typename T> std::unique_ptr<Transform> transform_factory()

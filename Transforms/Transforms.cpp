@@ -9,12 +9,67 @@ using namespace clang;
 using namespace clang::tooling;
 using namespace std;
 
+// FIXME: This isn't actually a common base. Should it be? If it should, unify. This should be pure virtual.
+refactorial::config::TransformConfig Transform::getTransformConfig() {
+	return refactorial::config::TransformConfig();
+}
+
+clang::SourceLocation Transform::findLocAfterToken(clang::SourceLocation curLoc, clang::tok::TokenKind tok) {
+	return clang::Lexer::findLocationAfterToken(curLoc, tok, ci->getSourceManager(), ci->getLangOpts(), true);
+}
+
+clang::SourceLocation Transform::getLocForEndOfToken(clang::SourceLocation curLoc) {
+	return clang::Lexer::getLocForEndOfToken(curLoc, 0, ci->getSourceManager(), ci->getLangOpts());
+}
+
+clang::SourceLocation Transform::findLocAfterSemi(clang::SourceLocation curLoc) {
+	return findLocAfterToken(curLoc, clang::tok::semi);
+}
+
+void Transform::addAllowedPath(const std::string& path) {
+	std::string regex = llvm::Regex::escape(path);
+	allowedDirectoryList.push_back(llvm::Regex(regex + ".*", llvm::Regex::IgnoreCase));
+}
+
+bool Transform::canChangeLocation(const clang::SourceLocation& loc) {
+	if (!loc.isValid()) {
+		return false;
+    }
+
+    clang::SourceManager &SM = ci->getSourceManager();
+    clang::FullSourceLoc FSL(loc, SM);
+    const clang::FileEntry *FE = SM.getFileEntryForID(FSL.getFileID());
+    if (!FE) {
+		// attempt to get the spelling location
+		auto SL = SM.getSpellingLoc(loc);
+		if (!SL.isValid()) {
+			return false;
+		}
+
+		clang::FullSourceLoc FSL2(SL, SM);
+		FE = SM.getFileEntryForID(FSL2.getFileID());
+		if (!FE) {
+			return false;
+		}
+    }
+
+	std::string absolute_name = refactorial::util::absolutePath(FE->getName());
+    for (auto I = allowedDirectoryList.begin(), E = allowedDirectoryList.end(); I != E; ++I) {
+		if (I->match(absolute_name)) {
+			return true;
+		}
+    }
+
+    return false;
+}
+
 TransformRegistry &TransformRegistry::get()
 {
 	static TransformRegistry instance;
 	return instance;
 }
 
+// FIXME: TransformRegistry and TransformAction should live somewhere else. Probably just a different header.
 void TransformRegistry::add(const string &name, transform_creator creator)
 {
 	llvm::outs() << "registered " << name << "\n";
