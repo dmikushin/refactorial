@@ -10,6 +10,10 @@ class QPixmap;
 class MyPixmap
 {
 public:
+	MyPixmap() {};
+	MyPixmap(const QPixmap& /*pix*/) {};
+	MyPixmap(QPixmap* /*pix*/ = 0) {};
+
 	QImage convertToImage() {
 		return QImage();
 	}

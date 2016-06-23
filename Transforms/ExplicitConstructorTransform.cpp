@@ -68,16 +68,13 @@ public:
 				return;
 			}
 
-			clang::FullSourceLoc src_loc(loc, *src_manager);
-
-			llvm::outs() << "ctor: " << ctor->getQualifiedNameAsString() << "\n";
-			llvm::StringRef s = clang::Lexer::getSourceText(clang::CharSourceRange::getTokenRange(ctor->getSourceRange()), *src_manager, clang::LangOptions(), 0);
+			llvm::StringRef s = clang::Lexer::getSourceText(clang::CharSourceRange::getTokenRange(ctor->getSourceRange()),
+															*src_manager, clang::LangOptions(), 0);
 
 			llvm::Regex explicit_regex("^explicit.*$", llvm::Regex::IgnoreCase);
 			if (!explicit_regex.match(s))
 			{
-				llvm::Twine replacement_text = "explicit " + s;
-				Replacer::instance().replace(ctor->getSourceRange(), replacement_text.str(), *src_manager);
+				Replacer::instance().insert(loc, "explicit ", *src_manager);
 			}
 		}
 	}
