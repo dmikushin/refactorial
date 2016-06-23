@@ -1,0 +1,5 @@
+---
+Transforms:
+  Qt3To5UIClasses:
+    WithinPaths:
+      - ..
