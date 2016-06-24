@@ -140,6 +140,7 @@ int main(int argc, const char **argv)
     rt.run(new TransformFactory(TransformRegistry::get()["FunctionRenameTransform"]));
     rt.run(new TransformFactory(TransformRegistry::get()["RecordFieldRenameTransform"]));
 	rt.run(new TransformFactory(TransformRegistry::get()["ExplicitConstructorTransform"]));
+	rt.run(new TransformFactory(TransformRegistry::get()["Qt3To5UIClasses"]));
 
     stable_deduplicate(replacements);
 

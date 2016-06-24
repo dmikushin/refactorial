@@ -18,6 +18,7 @@ namespace refactorial
 		};
 
 		struct ExplicitConstructorTransformConfig : TransformConfig {};
+		struct Qt3To5UIClassesTransformConfig : TransformConfig {};
 
 		struct Rename
 		{
@@ -40,6 +41,7 @@ namespace refactorial
 			FunctionRenameTransformConfig function_rename_transform;
 			RecordFieldRenameTransformConfig record_field_rename_transform;
 			ExplicitConstructorTransformConfig explicit_constructor_transform;
+			Qt3To5UIClassesTransformConfig qt3_to_5_ui_classes;
 		};
 
 		struct Config
@@ -62,6 +64,31 @@ namespace llvm
 			static void mapping(IO& io, ::Rename& r) {
 				io.mapRequired("From", r.from);
 				io.mapRequired("To", r.to);
+			}
+		};
+
+		template <> struct MappingTraits<Qt3To5UIClassesTransformConfig> {
+			struct NormalizedQt3To5UIClassesTransformConfig {
+				NormalizedQt3To5UIClassesTransformConfig(IO& io) {}
+				NormalizedQt3To5UIClassesTransformConfig(IO&, Qt3To5UIClassesTransformConfig& ect)
+					: within_paths(ect.within_paths) {}
+				Qt3To5UIClassesTransformConfig denormalize(IO&) {
+					Qt3To5UIClassesTransformConfig ect;
+
+					for (const std::string& p : within_paths) {
+						ect.within_paths.push_back(refactorial::util::absolutePath(p));
+					}
+
+					return ect;
+				}
+
+				std::vector<std::string> within_paths;
+			};
+
+			static void mapping(IO& io, Qt3To5UIClassesTransformConfig& ect) {
+				MappingNormalization<NormalizedQt3To5UIClassesTransformConfig, Qt3To5UIClassesTransformConfig> keys(io, ect);
+
+				io.mapOptional("WithinPaths", keys->within_paths);
 			}
 		};
 
@@ -180,6 +207,7 @@ namespace llvm
 				io.mapOptional("FunctionRename", t.function_rename_transform);
 				io.mapOptional("RecordFieldRename", t.record_field_rename_transform);
 				io.mapOptional("ExplicitConstructor", t.explicit_constructor_transform);
+				io.mapOptional("Qt3To5UIClasses", t.qt3_to_5_ui_classes);
 			}
 		};
 

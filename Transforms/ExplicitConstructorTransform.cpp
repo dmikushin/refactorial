@@ -1,7 +1,5 @@
 #include "ExplicitConstructorTransform.h"
 
-#include <clang/Lex/Preprocessor.h>
-
 #include "Replacer.h"
 
 using namespace clang::ast_matchers;
