@@ -13,10 +13,7 @@ namespace {
 class NamedDeclVisitor : public NamedDeclMatcher, public RecursiveASTVisitor<NamedDeclVisitor> {
 public:
     void HandleTranslationUnit(ASTContext &C) override {
-		refactorial::config::RenameConfig* config = static_cast<refactorial::config::RenameConfig*>(getTransformConfig());
-		if (!loadConfig(config)) {
-			return;
-		}
+		loadConfig(static_cast<refactorial::config::RenameConfig*>(getTransformConfig()));
 		this->TraverseDecl(C.getTranslationUnitDecl());
     }
 

@@ -26,7 +26,7 @@ namespace llvm {
 
 class NamedDeclMatcher : public Transform {
 public:
-    bool loadConfig(refactorial::config::RenameConfig* transform);
+    void loadConfig(refactorial::config::RenameConfig* transform);
 
     bool nameMatches(
         const clang::NamedDecl *decl,

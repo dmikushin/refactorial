@@ -132,15 +132,13 @@ int main(int argc, const char **argv)
     TransformRegistry::get().config = config;
     TransformRegistry::get().replacements = &replacements;
 
-    // TODO: Add support for specifying a base path where all files under that path are touched with
-    // replacements. This should allow for not touching system headers (or framework headers etc).
-
-	// FIXME: Should be a better way to handle this.
+	// FIXME: Should be a better way to handle this. How best to handle order? YamlIO doesn't appear to have knowledge
+	// of order (which is probably good in the long run).
+	rt.run(new TransformFactory(TransformRegistry::get()["Qt3To5UIClasses"]));
     rt.run(new TransformFactory(TransformRegistry::get()["TypeRenameTransform"]));
     rt.run(new TransformFactory(TransformRegistry::get()["FunctionRenameTransform"]));
     rt.run(new TransformFactory(TransformRegistry::get()["RecordFieldRenameTransform"]));
 	rt.run(new TransformFactory(TransformRegistry::get()["ExplicitConstructorTransform"]));
-	rt.run(new TransformFactory(TransformRegistry::get()["Qt3To5UIClasses"]));
 
     stable_deduplicate(replacements);
 

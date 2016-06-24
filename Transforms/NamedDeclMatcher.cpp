@@ -12,17 +12,12 @@
 
 using namespace clang;
 
-bool
-NamedDeclMatcher::loadConfig(refactorial::config::RenameConfig* transform)
+void NamedDeclMatcher::loadConfig(refactorial::config::RenameConfig* transform)
 {
-	llvm::outs() << "found type translations" << "\n";
 	for (const refactorial::config::Rename& r : transform->renames)
 	{
 		renameList.push_back(RegexStringPair(llvm::Regex(r.from), r.to));
-		llvm::errs() << "from: " << r.from << " to: " << r.to << "\n";
 	}
-
-	return true;
 }
 
   // if we have a NamedDecl and the fully-qualified name matches
@@ -65,11 +60,10 @@ NamedDeclMatcher::nameMatches(
       QN.insert(KN.size(), " ");
     }
 
-    llvm::SmallVector<llvm::StringRef, 2> matched;
+    llvm::SmallVector<llvm::StringRef, 10> matched;
     for (auto I = renameList.begin(), E = renameList.end(); I != E; ++I) {
       if (I->first.match(QN, &matched)) {
-        std::string err;
-        outNewName = I->first.sub(I->second, QN, &err);
+        outNewName = I->first.sub(I->second, QN);
         nameMap[D] = outNewName;
         return true;
       }
