@@ -3,6 +3,7 @@
 #include <qvaluelist.h>
 #include <qimage.h>
 #include <qpixmap.h>
+#include <qlistview.h>
 
 #include "example.h"
 
@@ -10,7 +11,11 @@
 Example::Example(QObject* parent)
 	: QObject(parent),
 	  _result(QString::null)
-{}
+{
+	QListView* lsv = new QListView(this);
+	lsv->setResizeMode(QListView::LastColumn);
+	lsv->header()->setResizeEnabled(false, 0);
+}
 
 //==============================================================================
 Example::Example(QObject* parent, const char* name)

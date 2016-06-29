@@ -18,6 +18,12 @@ Transforms:
       - From: QPixmap::convertToImage
         To: toImage
 
+      - From: QListView::setResizeMode
+        To: header()->setStretchLastSection
+
+      - From: QHeader::setResizeEnabled
+        To: setSectionResizeMode
+
   RecordFieldRename:
     WithinPaths:
       - ..
