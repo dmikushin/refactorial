@@ -25,6 +25,8 @@ PROJECT (Refactorial)
 #     make
 # }}}
 
+add_definitions("-D_HAS_EXCEPTIONS=0")
+
 if(NOT WIN32)
   # kinda hardcoded by trial-and-error...
   add_definitions("-fno-rtti -Wno-c++11-extensions -Wno-nested-anon-types")
@@ -118,12 +120,18 @@ if(NOT WIN32)
   llvm_get_config(LLVM_LDFLAGS "--ldflags")
 endif()
 
+set(ADDL_CXXFLAGS "")
 if(NOT WIN32)
   # FIXME: LLVM adds the wrong flag for Clang. Remove it and add the right one.
   string(REPLACE "-Wno-maybe-uninitialized" "-Wno-uninitialized" LLVM_CXXFLAGS "${LLVM_CXXFLAGS}")
+else()
+  # FIXME: LLVM wants to add /Ob2 which conflicts with flags added based on build type. Let the build type determine
+  # desired inlining behavior.
+  string(REPLACE "/Ob2" "" LLVM_CXXFLAGS "${LLVM_CXXFLAGS}")
+  set(ADDL_CXXFLAGS "${ADDL_CXXFLAGS} /WX")
 endif()
 
-set(CMAKE_CXX_FLAGS "${LLVM_CXXFLAGS}")
+set(CMAKE_CXX_FLAGS "${LLVM_CXXFLAGS} ${ADDL_CXXFLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${LLVM_LDFLAGS}")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
