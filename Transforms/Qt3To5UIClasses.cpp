@@ -65,19 +65,42 @@ class ConstructorInitializerHandler : public MatchFinder::MatchCallback
 {
 public:
 	ConstructorInitializerHandler(Transform* transform)
-		: _transform(transform)
+		: _transform(transform),
+		  _ui_initializer_regex(llvm::Regex("([^_ ,]+)_([^, ]+)"))
 	{}
 
 	virtual void run(const MatchFinder::MatchResult& result) {
 		if (const clang::CXXConstructorDecl* ctor = result.Nodes.getNodeAs<clang::CXXConstructorDecl>("ctor")) {
+			// Nothing to do if this isn't a user defined constructor.
+			if (!ctor->isUserProvided()) {
+				return;
+			}
+
 			clang::SourceLocation loc = ctor->getLocation();
 			if (!_transform->canChangeLocation(loc)) {
 				return;
 			}
 
 			clang::SourceManager* src_manager = result.SourceManager;
-			clang::CompoundStmt* stmt = llvm::cast<clang::CompoundStmt>(ctor->getBody());
 
+			bool has_ui_initializer = false;
+			for (const clang::CXXCtorInitializer* init : ctor->inits()) {
+				if (!init->isBaseInitializer()) {
+					continue;
+				}
+
+				clang::SourceRange range(init->getSourceLocation(), init->getLParenLoc().getLocWithOffset(-1));
+				llvm::StringRef src_text = clang::Lexer::getSourceText(clang::CharSourceRange::getTokenRange(range),
+																	   *src_manager, clang::LangOptions(), 0);
+				if (_ui_initializer_regex.match(src_text)) {
+					has_ui_initializer = true;
+					break;
+				}
+			}
+
+			if (!has_ui_initializer) return;
+
+			clang::CompoundStmt* stmt = llvm::cast<clang::CompoundStmt>(ctor->getBody());
 			// TODO: Almost certainly need to handle indentation better here but should be good enough for now.
 			Replacer::instance().insert(stmt->getLBracLoc().getLocWithOffset(1), "\n\tsetupUi(this);\n", *src_manager);
 		}
@@ -85,6 +108,7 @@ public:
 
 private:
 	Transform* _transform;
+	llvm::Regex _ui_initializer_regex;
 };
 
 //==============================================================================
@@ -98,7 +122,8 @@ void Qt3To5UIClasses::HandleTranslationUnit(clang::ASTContext& c)
 	finder.addMatcher(cxxRecordDecl().bind("class_definition"), &HandlerForBaseConstructor);
 
 	ConstructorInitializerHandler HandlerForConstructorInitializer(this);
-	finder.addMatcher(cxxConstructorDecl(hasAnyConstructorInitializer(anything())).bind("ctor"), &HandlerForConstructorInitializer);
+	finder.addMatcher(cxxConstructorDecl(hasAnyConstructorInitializer(allOf(isWritten(), isBaseInitializer()))).bind("ctor"),
+					  &HandlerForConstructorInitializer);
 
 	finder.matchAST(c);
 }
