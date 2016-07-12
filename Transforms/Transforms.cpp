@@ -75,7 +75,6 @@ TransformRegistry &TransformRegistry::get()
 // FIXME: TransformRegistry and TransformAction should live somewhere else. Probably just a different header.
 void TransformRegistry::add(const string &name, transform_creator creator)
 {
-	llvm::outs() << "registered " << name << "\n";
 	m_transforms.insert(pair<string, transform_creator>(name, creator));
 }
 

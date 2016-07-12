@@ -18,6 +18,10 @@ public:
 
 	virtual void run(const MatchFinder::MatchResult& result) {
 		if (const clang::CXXRecordDecl* rec = result.Nodes.getNodeAs<clang::CXXRecordDecl>("class_definition")) {
+			if (!rec->isThisDeclarationADefinition()) {
+				return;
+			}
+
 			clang::SourceLocation loc = rec->getLocation();
 			if (!_transform->canChangeLocation(loc)) {
 				return;
