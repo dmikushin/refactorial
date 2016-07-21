@@ -132,13 +132,16 @@ int main(int argc, const char **argv)
     TransformRegistry::get().config = config;
     TransformRegistry::get().replacements = &replacements;
 
-	// FIXME: Should be a better way to handle this. How best to handle order? YamlIO doesn't appear to have knowledge
-	// of order (which is probably good in the long run).
-	rt.run(new TransformFactory(TransformRegistry::get()["Qt3To5UIClasses"]));
-    rt.run(new TransformFactory(TransformRegistry::get()["TypeRenameTransform"]));
-    rt.run(new TransformFactory(TransformRegistry::get()["FunctionRenameTransform"]));
-    rt.run(new TransformFactory(TransformRegistry::get()["RecordFieldRenameTransform"]));
-	rt.run(new TransformFactory(TransformRegistry::get()["ExplicitConstructorTransform"]));
+	// FIXME: It would be ideal to rework the way Transforms get instantiated/injected so that we can ask the registry
+	// for the Transform and call methods off of it etc.
+#define EXEC_TRANSFORM(transform_name, transform_config) if (!config.transforms.transform_config.within_paths.empty()) { \
+		rt.run(new TransformFactory(TransformRegistry::get()[transform_name])); \
+	}
+	EXEC_TRANSFORM("Qt3To5UIClasses", qt3_to_5_ui_classes)
+	EXEC_TRANSFORM("TypeRenameTransform", type_rename_transform)
+	EXEC_TRANSFORM("FunctionRenameTransform", function_rename_transform)
+	EXEC_TRANSFORM("RecordFieldRenameTransform", record_field_rename_transform)
+	EXEC_TRANSFORM("ExplicitConstructorTransform", explicit_constructor_transform)
 
     stable_deduplicate(replacements);
 
