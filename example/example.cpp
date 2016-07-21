@@ -3,22 +3,25 @@
 #include <qvaluelist.h>
 #include <qimage.h>
 #include <qpixmap.h>
+#include <qheader.h>
 #include <qlistview.h>
+#include <qdir.h>
+#include <qfileinfo.h>
 
 #include "example.h"
 
 //==============================================================================
-Example::Example(QObject* parent)
+Example::Example(QObject* parent, WFlags f)
 	: QObject(parent),
 	  _result(QString::null)
 {
-	QListView* lsv = new QListView(this);
+	QListView* lsv = new QListView();
 	lsv->setResizeMode(QListView::LastColumn);
 	lsv->header()->setResizeEnabled(false, 0);
 }
 
 //==============================================================================
-Example::Example(QObject* parent, const char* name)
+Example::Example(QObject* parent, const char* name, WFlags f)
 	: QObject(parent, name),
 	  _result(QString::null)
 {}
@@ -56,4 +59,16 @@ QString Example::joinTogether(const QValueList<QVariant>& in)
 	}
 
 	return _result;
+}
+
+//==============================================================================
+QVariant Example::testBool(bool b)
+{
+	return QVariant(b, 0);
+}
+
+//==============================================================================
+QDir Example::getPath(QFileInfo f)
+{
+	return f.dir(true);
 }

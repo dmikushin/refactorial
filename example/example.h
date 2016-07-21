@@ -6,6 +6,8 @@
 class QImage;
 class QString;
 class QPixmap;
+class QFileInfo;
+class QDir;
 
 class MyPixmap
 {
@@ -14,7 +16,7 @@ public:
 	MyPixmap(const QPixmap& /*pix*/) {};
 	MyPixmap(QPixmap* /*pix*/ = 0) {};
 
-	QImage convertToImage() {
+	QImage convertToImage() const {
 		return QImage();
 	}
 };
@@ -24,8 +26,8 @@ class Example : public QObject
 	Q_OBJECT
 
 public:
-	Example(QObject* parent);
-	Example(QObject* parent, const char* name);
+	Example(QObject* parent, WFlags f = 0);
+	Example(QObject* parent, const char* name, WFlags f = 0);
 	explicit Example(int foo);
 	~Example();
 
@@ -33,6 +35,9 @@ public:
 	QImage toImage(const MyPixmap& pix);
 
 	QString joinTogether(const QValueList<QVariant>& in);
+
+	QVariant testBool(bool b);
+	QDir getPath(QFileInfo f);
 
 private:
 	QString _result;
