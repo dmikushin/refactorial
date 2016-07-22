@@ -17,7 +17,10 @@ namespace refactorial
 			std::vector<std::string> within_paths;
 		};
 
-		struct ExplicitConstructorTransformConfig : TransformConfig {};
+		struct ExplicitConstructorTransformConfig : TransformConfig
+		{
+			std::vector<std::string> ignores;
+		};
 		struct Qt3To5UIClassesTransformConfig : TransformConfig {};
 
 		struct Rename
@@ -159,16 +162,20 @@ namespace llvm
 						ect.within_paths.push_back(refactorial::util::absolutePath(p));
 					}
 
+					ect.ignores = ignores;
+
 					return ect;
 				}
 
 				std::vector<std::string> within_paths;
+				std::vector<std::string> ignores;
 			};
 
 			static void mapping(IO& io, ExplicitConstructorTransformConfig& ect) {
 				MappingNormalization<NormalizedExplicitConstructorTransformConfig, ExplicitConstructorTransformConfig> keys(io, ect);
 
 				io.mapOptional("WithinPaths", keys->within_paths);
+				io.mapOptional("Ignore", keys->ignores);
 			}
 		};
 

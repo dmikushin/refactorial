@@ -10,9 +10,9 @@ REGISTER_TRANSFORM(ExplicitConstructorTransform);
 class ConstructorHandler : public MatchFinder::MatchCallback
 {
 public:
-	ConstructorHandler(Transform* transform)
+	ConstructorHandler(Transform* transform, std::vector<std::string> ignores)
 	  : _transform(transform),
-		_explicit_regex(llvm::Regex("^explicit.*$", llvm::Regex::IgnoreCase))
+		_ignores(ignores)
 	{}
 
 	virtual void run(const MatchFinder::MatchResult& result) {
@@ -29,19 +29,25 @@ public:
 				return;
 			}
 
-			clang::SourceManager* src_manager = result.SourceManager;
-			llvm::StringRef s = clang::Lexer::getSourceText(clang::CharSourceRange::getTokenRange(ctor->getSourceRange()),
-															*src_manager, clang::LangOptions(), 0);
-			if (!_explicit_regex.match(s))
-			{
-				Replacer::instance().insert(loc, "explicit ", *src_manager);
+			// Nothing to do here if it is already explicit.
+			if (ctor->isExplicit()) return;
+
+			// Determine if this class is in our ignore list.
+			std::string name = ctor->getQualifiedNameAsString();
+			for (std::string ignore_class : _ignores) {
+				if (ignore_class == name) {
+					return;
+				}
 			}
+
+			clang::SourceManager* src_manager = result.SourceManager;
+			Replacer::instance().insert(loc, "explicit ", *src_manager);
 		}
 	}
 
 private:
 	Transform* _transform;
-	llvm::Regex _explicit_regex;
+	std::vector<std::string> _ignores;
 };
 
 //==============================================================================
@@ -49,7 +55,9 @@ void ExplicitConstructorTransform::HandleTranslationUnit(clang::ASTContext& c)
 {
 	init();
 
-	ConstructorHandler HandlerForConstructor(this);
+	auto config = static_cast<refactorial::config::ExplicitConstructorTransformConfig*>(getTransformConfig());
+	std::vector<std::string> ignores = config->ignores;
+	ConstructorHandler HandlerForConstructor(this, ignores);
 
 	MatchFinder finder;
 	finder.addMatcher(cxxConstructorDecl(hasParent(cxxRecordDecl())).bind("ctor"), &HandlerForConstructor);
