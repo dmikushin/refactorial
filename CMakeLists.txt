@@ -159,6 +159,7 @@ add_executable(refactorial
 	Transforms/ExplicitConstructorTransform.cpp
     Transforms/NamedDeclMatcher.cpp
     Transforms/RenameTransform.cpp
+	Transforms/ArgumentChange.cpp
     Transforms/Transforms.cpp
     Transforms/Replacer.cpp
 	)

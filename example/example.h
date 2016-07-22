@@ -21,6 +21,14 @@ public:
 	}
 };
 
+class Test
+{
+public:
+	void doArg(bool b);
+	void doArg(bool b, int i);
+	void doArg(bool b, int i, const QString& s);
+};
+
 class Example : public QObject
 {
 	Q_OBJECT

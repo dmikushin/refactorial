@@ -70,5 +70,20 @@ QVariant Example::testBool(bool b)
 //==============================================================================
 QDir Example::getPath(QFileInfo f)
 {
+	Test t;
+	t.doArg(f.exists());
+	t.doArg(f.exists(), 17, QString("hello world"));
 	return f.dir(true);
 }
+
+//==============================================================================
+void Test::doArg(bool)
+{}
+
+//==============================================================================
+void Test::doArg(bool, int)
+{}
+
+//==============================================================================
+void Test::doArg(bool, int, const QString&)
+{}
