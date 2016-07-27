@@ -34,8 +34,7 @@ namespace refactorial
 			std::string from_function;
 			std::vector<std::string> from_args;
 
-			std::string to_function;
-			std::vector<std::string> to_args;
+			std::string to;
 		};
 
 		struct RenameConfig : TransformConfig
@@ -94,10 +93,9 @@ namespace llvm
 					std::vector<std::string> from_args = refactorial::util::convertTypeNamesForSource(c.from_args);
 
 					llvm::Twine from_twine = c.from_function + "(" + refactorial::util::joinStrings(from_args, ", ") + ")";
-					llvm::Twine to_twine = c.to_function + "(" + refactorial::util::joinStrings(c.to_args, ", ") + ")";
 
 					from = from_twine.str();
-					to = to_twine.str();
+					to = c.to;
 				}
 				Change denormalize(IO&) {
 					Change c;
@@ -106,9 +104,7 @@ namespace llvm
 					c.from_function = from_parts.first;
 					c.from_args = refactorial::util::convertTypeNamesForClang(from_parts.second);
 
-					std::pair<std::string, std::vector<std::string>> to_parts = refactorial::util::parseSignature(to);
-					c.to_function = to_parts.first;
-					c.to_args = to_parts.second;
+					c.to = to;
 
 					return c;
 				}
