@@ -4,30 +4,33 @@
 #include <clang/Tooling/Refactoring.h>
 #include <clang/Tooling/Tooling.h>
 
+#include <algorithm>
+#include <atomic>
+#include <execution>
 #include <iostream>
 #include <fstream>
+
+#include "Transforms/Transforms.h"
 
 using namespace clang;
 using namespace clang::tooling;
 
-#include "Transforms/Transforms.h"
-
 static llvm::cl::OptionCategory optionCategory("Refactorial options");
 
 static llvm::cl::opt<bool> apply_replacements(
-	"apply",
-	llvm::cl::desc("Apply identified replacements."),
-	llvm::cl::Optional);
+    "apply",
+    llvm::cl::desc("Apply identified replacements."),
+    llvm::cl::Optional);
 
 static llvm::cl::opt<bool> print_replacements(
-	"print",
-	llvm::cl::desc("Print identified replacements."),
-	llvm::cl::Optional);
+    "print",
+    llvm::cl::desc("Print identified replacements."),
+    llvm::cl::Optional);
 
 static llvm::cl::opt<std::string> specfile_path(
-	"spec",
-	llvm::cl::desc("Refactor specification file path."),
-	llvm::cl::Required);
+    "spec",
+    llvm::cl::desc("Refactor specification file path."),
+    llvm::cl::Required);
 
 static const char usageText[] = "";
 
@@ -41,9 +44,9 @@ ordering_cmp(const Replacement &LHS, const Replacement &RHS) {
     return LHS.getFilePath() < RHS.getFilePath();
 }
 
-/// Remove duplicate replacements with order preservation
-static void
-stable_deduplicate(std::vector<Replacement> &r) {
+// Remove duplicate replacements with order preservation
+static void stable_deduplicate(std::vector<Replacement> &r)
+{
     // array sorted with Replacement::operator<()
     std::vector<Replacement> sorted(r.begin(), r.end());
     std::sort(sorted.begin(), sorted.end());
@@ -72,9 +75,9 @@ stable_deduplicate(std::vector<Replacement> &r) {
     }
 }
 
-/// Imported RefactoringTool::runAndSave() using std::vector
-static int
-commit_changes(RefactoringTool &Tool, const Replacements &R) {
+// Imported RefactoringTool::runAndSave() using std::vector
+static int commit_changes(RefactoringTool &Tool, const Replacements &R)
+{
   LangOptions DefaultLangOptions;
   IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts = new DiagnosticOptions();
   TextDiagnosticPrinter DiagnosticPrinter(llvm::errs(), &*DiagOpts);
@@ -90,7 +93,7 @@ commit_changes(RefactoringTool &Tool, const Replacements &R) {
   return Rewrite.overwriteChangedFiles() ? 1 : 0;
 }
 
-std::string readFromStream(std::istream& in)
+static std::string readFromStream(std::istream& in)
 {
     std::string ret;
     char buffer[4096];
@@ -104,63 +107,82 @@ std::string readFromStream(std::istream& in)
 
 int main(int argc, const char **argv)
 {
-    CommonOptionsParser cmdl(argc, argv, optionCategory, usageText);
+    CommonOptionsParser optionsParser(argc, argv, optionCategory, usageText);
 
-    RefactoringTool rt(cmdl.getCompilations(), cmdl.getSourcePathList());
+    std::vector<std::function<void()>> tasks;
 
-    IgnoringDiagConsumer ignore;
-    rt.setDiagnosticConsumer(&ignore);
+    auto && sources = optionsParser.getCompilations().getAllFiles();
+    const size_t total = std::size(sources);
 
-	std::ifstream spec_stream(specfile_path);
-	if (!spec_stream.is_open())
-	{
-		llvm::errs() << "Unable to open provided spec file path." << "\n";
-		return 1;
-	}
+    std::ifstream spec_stream(specfile_path);
+    if (!spec_stream.is_open())
+    {
+        llvm::errs() << "Unable to open provided spec file path." << "\n";
+        return 1;
+    }
 
     std::string config_yaml = readFromStream(spec_stream);
-	spec_stream.close();
+    spec_stream.close();
 
     refactorial::config::Config config;
     llvm::yaml::Input yin(config_yaml);
     yin >> config;
 
-    std::vector<Replacement> replacements;
-
     TransformRegistry::get().config = config;
-    TransformRegistry::get().replacements = &replacements;
 
-	// FIXME: It would be ideal to rework the way Transforms get instantiated/injected so that we can ask the registry
-	// for the Transform and call methods off of it etc.
-#define EXEC_TRANSFORM(transform_name, transform_config) if (!config.transforms.transform_config.within_paths.empty()) { \
-		rt.run(new TransformFactory(TransformRegistry::get()[transform_name])); \
-	}
-	EXEC_TRANSFORM("Qt3To5UIClasses", qt3_to_5_ui_classes)
-	EXEC_TRANSFORM("TypeRenameTransform", type_rename_transform)
-	EXEC_TRANSFORM("FunctionRenameTransform", function_rename_transform)
-	EXEC_TRANSFORM("RecordFieldRenameTransform", record_field_rename_transform)
-	EXEC_TRANSFORM("ExplicitConstructorTransform", explicit_constructor_transform)
-	EXEC_TRANSFORM("ArgumentChange", argument_change_transform)
-    EXEC_TRANSFORM("AccessorsTransform", accessors_transform)
+    for (auto&& file : sources)
+    {
+        tasks.emplace_back([total, file, &optionsParser, &config]
+        {
+            static std::atomic_int32_t counter;
+            std::cout << "[" << counter++ << "/" << total << "] " << file << std::endl;
 
-    stable_deduplicate(replacements);
+            RefactoringTool rt(optionsParser.getCompilations(), file);
 
-	if (print_replacements)
-	{
-		llvm::outs() << "Replacements collected by the tool:\n";
-		for (const auto& r : replacements) {
-			llvm::outs() << r.toString() << "\n";
-		}
-	}
+            IgnoringDiagConsumer ignore;
+            rt.setDiagnosticConsumer(&ignore);
 
-	if (apply_replacements)
-	{
-        Replacements rs;
-        for (const auto& r : replacements)
-            auto err = rs.add(r);
-		
-        commit_changes(rt, rs);
-	}
+            std::vector<Replacement> replacements;
+            TransformRegistry::get().replacements = &replacements;
+
+            // FIXME: It would be ideal to rework the way Transforms get instantiated/injected so that we can ask the registry
+            // for the Transform and call methods off of it etc.
+            #define EXEC_TRANSFORM(transform_name, transform_config) \
+                if (!config.transforms.transform_config.within_paths.empty()) \
+                { \
+                    rt.run(new TransformFactory(TransformRegistry::get()[transform_name])); \
+                }
+    
+            EXEC_TRANSFORM("Qt3To5UIClasses", qt3_to_5_ui_classes)
+            EXEC_TRANSFORM("TypeRenameTransform", type_rename_transform)
+            EXEC_TRANSFORM("FunctionRenameTransform", function_rename_transform)
+            EXEC_TRANSFORM("RecordFieldRenameTransform", record_field_rename_transform)
+            EXEC_TRANSFORM("ExplicitConstructorTransform", explicit_constructor_transform)
+            EXEC_TRANSFORM("ArgumentChange", argument_change_transform)
+            EXEC_TRANSFORM("AccessorsTransform", accessors_transform)
+
+            stable_deduplicate(replacements);
+
+            if (print_replacements)
+            {
+                llvm::outs() << "Replacements collected by the tool:\n";
+                for (const auto& r : replacements)
+                    llvm::outs() << r.toString() << "\n";
+            }
+
+            if (apply_replacements)
+            {
+                Replacements rs;
+                for (const auto& r : replacements)
+                    auto err = rs.add(r);
+
+                commit_changes(rt, rs);
+            }
+        });
+    }
+
+    std::for_each(std::execution::par_unseq, std::begin(tasks), std::end(tasks), [](auto && f) { f(); });
 
     return 0;
 }
+
