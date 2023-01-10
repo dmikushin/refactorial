@@ -1,7 +1,18 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 2.6)
+cmake_minimum_required(VERSION 3.1)
 
-SET(CMAKE_BUILD_TYPE None)
-SET(CMAKE_C_COMPILER clang)
-SET(CMAKE_CXX_COMPILER clang++)
-PROJECT (foo)
-ADD_EXECUTABLE (foo foo.cpp)
+project(function_rename CXX)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+configure_file(foo.cpp.in foo.cpp)
+configure_file(foo.h.in foo.h)
+
+add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_BINARY_DIR}/foo.cpp)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+add_custom_target(test
+     DEPENDS ${PROJECT_NAME}
+     COMMAND ${REFACTORIAL} --spec ${CMAKE_CURRENT_SOURCE_DIR}/function_rename.yml
+     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+     COMMENT "Testing FunctionRename")
+

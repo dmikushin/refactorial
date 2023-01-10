@@ -43,3 +43,10 @@ add_custom_target(test_accessors
     COMMAND ${CMAKE_COMMAND} -S ${CMAKE_CURRENT_SOURCE_DIR}/tests/Accessors -B${CMAKE_CURRENT_BINARY_DIR}/tests/Accessors -DREFACTORIAL=$<TARGET_FILE:${PROJECT_NAME}> -DCMAKE_CXX_COMPILER=${LLVM_TOOLS_BINARY_DIR}/clang++${CMAKE_EXECUTABLE_SUFFIX}
     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/tests/Accessors --target test
     COMMENT "Testing Accessors")
+
+add_custom_target(test_function_rename
+     DEPENDS ${PROJECT_NAME}
+     COMMAND ${CMAKE_COMMAND} -S ${CMAKE_CURRENT_SOURCE_DIR}/tests/FunctionRename -B${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRename -DREFACTORIAL=$<TARGET_FILE:${PROJECT_NAME}> -DCMAKE_CXX_COMPILER=${LLVM_TOOLS_BINARY_DIR}/clang++${CMAKE_EXECUTABLE_SUFFIX}
+     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRename --target test
+     COMMENT "Testing FunctionRename")
+
