@@ -1,22 +1,3 @@
-### Under Heavy Construction
-
-Non-exclusive list of changes:
- - Make building on Win32 and Linux work (maybe make an effort to support OS X)
- - Remove dependencies that can be satisified by LLVM's libs (pcre, boost, yaml-cpp)
- - Allow renaming types without changing the definition (for example, when upgrading between versions of a dependency)
- - And more
-
-Note that the README is in a very outdated state and will be updated in the future.
-
-### Blocking Issues
-
- - The _result field initialization in the Example constructor is not changed.
- - QValueList<QVariant> in the iterator loop is not changed.
-
-
-
-
-
 # Refactorial
 
 Refactorial is a Clang-based refactoring tool for C, C++, Objective-C, and Objective-C++. It has a number of nice properties:
@@ -26,79 +7,31 @@ Refactorial is a Clang-based refactoring tool for C, C++, Objective-C, and Objec
 3.  It can refactor both a library and its clients using the same script, so that library developers can upgrade libraries more easily by distributing the script
 4.  It is extensible
 
+Refactorial provides the following transforms:
+ 
+*   [**Accessor**](doc/TRANSFORM-accessors.md): Synthesize getters and setters for designated member variables
+*   **MethodMove**: Move inlined member function bodies to the implementation file
+*   **ExtractParameter**: promote a function variable to a parameter to that function
+*   **TypeRename**: Rename types, including tag types (enum, struct, union, class), template classes, Objective-C types (class and protocol), typedefs and     even bulit-in types (e.g. `unsigned` to `uint32_t`)
+*   **RecordFieldRename**: Rename record (struct, union) fields, including C++ member variables
+*   **FunctionRename**: Rename functions, including C++ member functions
 
-## Installation
+This is an update of the [original refactorial](https://github.com/lukhnos/refactorial), which supports LLVM & Clang 12.
 
-There are two ways to install Refactorial:
+## Prerequisites
 
-*   Download a pre-built binary. Currently on Mac OS X only. Get it here:
-    https://github.com/lukhnos/refactorial/downloads
-*   Build on your own. See below.
+```
+sudo apt install llvm-12-dev clang-12 libclang-12-dev libtbb-dev
+```
 
+## Building
 
-## Building Refactorial
-
-We have built Refactorial on both Linux and Mac OS X.
-
-You need the following dependencies:
-
-*   LLVM and Clang
-*   yaml-cpp
-*   Boost (needed by yaml-cpp)
-*   pcre
-
-For LLVM and Clang, you need to build them from the latest source. *Using the
-built-in one that comes with Xcode 4.2 won't work*.
-
-Use the latest yaml-cpp from source (most binary distributions won't work).
-Get it from http://code.google.com/p/yaml-cpp/source/checkout
-
-For Boost and pcre, you can install them in whatever way you like. Latest
-binary distribution versions will do.
-
-To build Refactorial, you need to use the latest Clang compiler. yaml-cpp uses
-templates extensively and some instantiations can't be compiled using older
-Clang versions. gcc should also work.
-
-Refactorial is written in C++11, although Clang will happily compile it
-even without turning on C++11 (we don't use that much other then `auto`).
-If you want to build Refactorial with C++11 on (`--std=c++0x`), you'll
-probably also need to build LLVM, Clang, yaml-cpp and pcre with the same
-option. Which can be a pain due to linkage issues.
-
-To build Refactorial, do this:
-
-    cmake .
-    make
-
-If you're on OS X, the default is to use the Clang installed in
-`/usr/local`. This assumes you have built your own Clang (which is what we
-do).
-
-
-### Building Refactorial and Its Dependencies with C++11 Enabled
-
-You can safely skip this section.
-
-If you really want to build Refactorial with C++11 enabled, you will also need
-to install libc++ (rev 157242; more recent versions won't work). Build all
-dependencies (all of them use CMake) with:
-
-    cmake -DCMAKE_BUILD_TYPE:STRING=Release \
-        -DCMAKE_CXX_FLAGS:STRING=-stdlib=libc++ \
-        -DCMAKE_SHARED_LINKER_FLAGS:STRING=-stdlib=libc++ \
-        .
-    make
-    sudo make install
-
-Then build Refactorial with:
-
-    cmake -DCMAKE_BUILD_TYPE:STRING=Release \
-        -DCMAKE_CXX_FLAGS:STRING="-stdlib=libc++ --std=c++0x" \
-        -DCMAKE_SHARED_LINKER_FLAGS:STRING=-stdlib=libc++ \
-        .
-    make
-
+```
+mkdir build
+cd build
+cmake ..
+make
+```
 
 ## Using Refactorial
 
@@ -111,23 +44,14 @@ compiler options. It can be seen as a condensed Makefile.
 CMake, which is a popular GNU Autotools replacement ("`./configure; make`"),
 will happily generate the compilation database for your CMake project:
 
-    cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:STRING=ON <your build dir>
-    
+```
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:STRING=ON <your build dir>
+```
+
 LLVM incidentally also uses CMake, and so do many popular open source projects.
 
-There is currently no way to generate a compilation database out of a
+There is no way to generate a compilation database out of a
 Makefile or an IDE project (e.g. Microsoft `.vcproj` or Xcode's `.xcodeproj`).
-That's something that we need to work on.
-
-
-## Transforms Provided
-
-*   [**Accessor**](doc/TRANSFORM-accessors.md): Synthesize getters and setters for designated member variables
-*   **MethodMove**: Move inlined member function bodies to the implementation file
-*   **ExtractParameter**: promote a function variable to a parameter to that function
-*   **TypeRename**: Rename types, including tag types (enum, struct, union, class), template classes, Objective-C types (class and protocol), typedefs and even bulit-in types (e.g. `unsigned` to `uint32_t`)
-*   **RecordFieldRename**: Rename record (struct, union) fields, including C++ member variables
-*   **FunctionRename**: Rename functions, including C++ member functions
 
 You tell Refactorial using a YAML config file. For example, to rename all
 classes with the prefix `Tree` to `Trie`, you can write a `refactor.yml` like
@@ -169,6 +93,10 @@ More documentation upcoming. Before that, take a look at our test cases in
 `tests/`. You can get an idea what each source transform does and which
 parameters they take.
 
+## Known Issues
+
+- The result field initialization in the Example constructor is not changed.
+- `QValueList<QVariant>` in the iterator loop is not changed.
 
 ## Copyright and License
 
