@@ -16,7 +16,7 @@ Refactorial provides the following transforms:
 *   **RecordFieldRename**: Rename record (struct, union) fields, including C++ member variables
 *   **FunctionRename**: Rename functions, including C++ member functions
 
-This is an update of the [original refactorial](https://github.com/lukhnos/refactorial), which supports LLVM & Clang 12.
+This is an update of the [original Refactorial](https://github.com/lukhnos/refactorial), which supports LLVM & Clang 12.
 
 ## Prerequisites
 
@@ -39,21 +39,19 @@ make
 
 Clang-based tools (to be specific, those that use LibTooling) use the
 "compilation database" to know which source files to parse with which
-compiler options. It can be seen as a condensed Makefile.
+compiler options.
 
-CMake, which is a popular GNU Autotools replacement ("`./configure; make`"),
-will happily generate the compilation database for your CMake project:
+In order to generate a compilation database for a CMake-based project,
+add the following option:
 
 ```
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:STRING=ON <your build dir>
 ```
 
-LLVM incidentally also uses CMake, and so do many popular open source projects.
-
-There is no way to generate a compilation database out of a
+Only CMake is supported, there is no way to generate a compilation database out of a
 Makefile or an IDE project (e.g. Microsoft `.vcproj` or Xcode's `.xcodeproj`).
 
-You tell Refactorial using a YAML config file. For example, to rename all
+You tell Refactorial what to do using a YAML config file. For example, to rename all
 classes with the prefix `Tree` to `Trie`, you can write a `refactor.yml` like
 this:
 
@@ -65,13 +63,13 @@ this:
           - /opt/.*
         Types:
           - class Tree(.*): Trie\1
-          
+
 Here `\1` is the regular expression capture directive.
 
 Then, in your build directory (where you have the compilation database), run:
 
     refactorial < refactor.yml
-    
+
 Refactorial will then run the TypeRename transform on all source files in your
 project.
 
@@ -89,9 +87,8 @@ If you only need to refactor some of the files, you can say:
         Types:
           - class Tree(.*): Trie\1
 
-More documentation upcoming. Before that, take a look at our test cases in
-`tests/`. You can get an idea what each source transform does and which
-parameters they take.
+For more examples, take a look at our test cases in `tests/`. You can get an idea
+what each source transform does and which parameters they take.
 
 ## Known Issues
 
@@ -100,7 +97,11 @@ parameters they take.
 
 ## Copyright and License
 
-Copyright © 2012 Lukhnos Liu and Thomas Minor.
+Copyright © 2012 Lukhnos Liu and Thomas Minor
+Copyright © 2014 Martin Zenzes
+Copyright © 2014, 2016 Artem Kotsynyak
+Copyright © 2016 Ryan Wersal
+Copyright © 2023 Dmitry Mikushin
 
 Released under the MIT License.
 
