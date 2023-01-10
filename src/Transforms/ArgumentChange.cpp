@@ -17,7 +17,7 @@ public:
 
 	virtual void run(const MatchFinder::MatchResult& result) {
 		if (const clang::CallExpr* call = result.Nodes.getNodeAs<clang::CallExpr>("call")) {
-			clang::SourceLocation loc = call->getLocStart();
+			clang::SourceLocation loc = call->getBeginLoc();
 			if (!_transform->canChangeLocation(loc)) {
 				return;
 			}
@@ -38,7 +38,7 @@ public:
 
 			if (!argumentsMatch(fn_decl, matched_change)) return;
 
-			std::vector<std::string> args = getArgumentSource(result, call->getNumArgs(), [&call](int index) {
+			auto args = getArgumentSource(result, call->getNumArgs(), [&call](int index) {
 					return call->getArg(index);
 				});
 
@@ -54,7 +54,7 @@ public:
 			Replacer::instance().replace(range, new_src, *(result.SourceManager));
 
 		} else if (const clang::CXXConstructExpr* ctor = result.Nodes.getNodeAs<clang::CXXConstructExpr>("ctor")) {
-			clang::SourceLocation loc = ctor->getLocStart();
+			clang::SourceLocation loc = ctor->getBeginLoc();
 			if (!_transform->canChangeLocation(loc)) {
 				return;
 			}
@@ -66,11 +66,11 @@ public:
 
 			if (!argumentsMatch(ctor->getConstructor(), matched_change)) return;
 
-			std::vector<std::string> args = getArgumentSource(result, ctor->getNumArgs(), [&ctor](int index) {
+			auto args = getArgumentSource(result, ctor->getNumArgs(), [&ctor](int index) {
 					return ctor->getArg(index);
 				});
 
-			std::string new_src = generateNewSource(matched_change, args);
+			auto new_src = generateNewSource(matched_change, args);
 			clang::SourceRange range(ctor->getArg(0)->getExprLoc(), ctor->getParenOrBraceRange().getEnd().getLocWithOffset(-1));
 			Replacer::instance().replace(range, new_src, *(result.SourceManager));
 		}
@@ -107,20 +107,20 @@ private:
 	}
 
 	template<typename Func>
-	std::vector<std::string> getArgumentSource(const MatchFinder::MatchResult& result, int arg_count,
+	std::vector<llvm::StringRef> getArgumentSource(const MatchFinder::MatchResult& result, int arg_count,
 											   Func arg_getter)
 	{
-		std::vector<std::string> args;
+		std::vector<llvm::StringRef> args;
 		for (int i = 0; i < arg_count; ++i) {
 			const clang::Expr* arg = arg_getter(i);
 			clang::SourceRange range = arg->getSourceRange();
-			std::string src = refactorial::util::sourceText(range, *(result.SourceManager));
+			auto src = refactorial::util::sourceText(range, *(result.SourceManager));
 			args.push_back(src);
 		}
 		return args;
 	}
 
-	std::string generateNewSource(const refactorial::config::Change& change, const std::vector<std::string>& args)
+	std::string generateNewSource(const refactorial::config::Change& change, const std::vector<llvm::StringRef>& args)
 	{
 		std::string new_src(change.to);
 		for (int i = 0; i < args.size(); ++i) {

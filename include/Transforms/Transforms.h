@@ -70,7 +70,7 @@ private:
 	transform_creator tcreator;
 public:
 	TransformFactory(transform_creator creator);
-	clang::FrontendAction *create();
+    std::unique_ptr<clang::FrontendAction> create();
 };
 
 #endif

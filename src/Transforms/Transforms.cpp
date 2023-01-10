@@ -56,7 +56,7 @@ bool Transform::canChangeLocation(const clang::SourceLocation& loc) {
 		}
     }
 
-	std::string absolute_name = refactorial::util::absolutePath(FE->getName());
+	auto absolute_name = refactorial::util::absolutePath(FE->getName());
     for (auto I = allowedDirectoryList.begin(), E = allowedDirectoryList.end(); I != E; ++I) {
 		if (I->match(absolute_name)) {
 			return true;
@@ -104,6 +104,6 @@ private:
 TransformFactory::TransformFactory(transform_creator creator) {
 	tcreator = creator;
 }
-FrontendAction *TransformFactory::create() {
-	return new TransformAction(tcreator);
+std::unique_ptr<FrontendAction> TransformFactory::create() {
+	return std::make_unique<TransformAction>(tcreator);
 }

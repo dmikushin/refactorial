@@ -19,7 +19,7 @@ namespace refactorial
 {
 	namespace util
 	{
-		std::string absolutePath(const std::string& relative_path) {
+		std::string absolutePath(const llvm::StringRef& relative_path) {
 			#ifdef WIN32
 			// Entirely derived from LLVM's FileManager source (see getCanonicalName).
 			llvm::SmallString<PATH_MAX> path_buffer(relative_path);
@@ -29,7 +29,7 @@ namespace refactorial
 			return path_buffer.str().str();
 			#else
 			char resolved_path[PATH_MAX];
-			realpath(relative_path.c_str(), resolved_path);
+			realpath(relative_path.str().c_str(), resolved_path);
 			return std::string(resolved_path);
 			#endif
 		}
@@ -40,7 +40,7 @@ namespace refactorial
 											   source_manager, clang::LangOptions(), 0);
 		}
 
-		std::pair<std::string, std::vector<std::string>> parseSignature(const std::string& signature)
+		std::pair<llvm::StringRef, std::vector<std::string>> parseSignature(const std::string& signature)
 		{
 			std::pair<llvm::StringRef, llvm::StringRef> from_parts = llvm::StringRef(signature).split("(");
 

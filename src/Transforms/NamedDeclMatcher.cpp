@@ -55,7 +55,7 @@ NamedDeclMatcher::nameMatches(
     // special handling for TagDecl
     if (auto T = llvm::dyn_cast<clang::TagDecl>(D)) {
       auto KN = T->getKindName();
-      assert(KN && "getKindName() must return a non-NULL value");
+      assert(!KN.empty() && "getKindName() must return a non-empty name");
       QN.insert(0, KN);
       QN.insert(KN.size(), " ");
     }
@@ -90,7 +90,7 @@ NamedDeclMatcher::stringMatches(std::string name, std::string &outNewName)
 	llvm::SmallVector<llvm::StringRef, 2> matched;
     for (auto I = renameList.begin(), E = renameList.end(); I != E; ++I) {
 	  if (I->first.match(name, &matched)) {
-        std::string newName = matched[0];
+        auto newName = matched[0];
         matchedStringMap[name] = newName;
         outNewName = newName;
         return true;
@@ -105,7 +105,7 @@ bool
 NamedDeclMatcher::stmtInSameFileAsDecl(clang::Stmt *S, clang::Decl *D)
 {
     return ci->getSourceManager().isWrittenInSameFile(
-        S->getLocStart(),
+        S->getBeginLoc(),
         D->getLocation());
 }
 

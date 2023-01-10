@@ -72,7 +72,6 @@ using namespace refactorial::config;
 
 LLVM_YAML_IS_SEQUENCE_VECTOR(Rename)
 LLVM_YAML_IS_SEQUENCE_VECTOR(Change)
-LLVM_YAML_IS_SEQUENCE_VECTOR(std::string)
 
 namespace llvm
 {
@@ -100,7 +99,7 @@ namespace llvm
 				Change denormalize(IO&) {
 					Change c;
 
-					std::pair<std::string, std::vector<std::string>> from_parts = refactorial::util::parseSignature(from);
+					std::pair<llvm::StringRef, std::vector<std::string>> from_parts = refactorial::util::parseSignature(from);
 					c.from_function = from_parts.first;
 					c.from_args = refactorial::util::convertTypeNamesForClang(from_parts.second);
 

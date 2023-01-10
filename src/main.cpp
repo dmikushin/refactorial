@@ -7,8 +7,6 @@
 #include <iostream>
 #include <fstream>
 
-#include "yamlreader.h"
-
 using namespace clang;
 using namespace clang::tooling;
 
@@ -76,7 +74,7 @@ stable_deduplicate(std::vector<Replacement> &r) {
 
 /// Imported RefactoringTool::runAndSave() using std::vector
 static int
-commit_changes(RefactoringTool &Tool, const std::vector<Replacement> &R) {
+commit_changes(RefactoringTool &Tool, const Replacements &R) {
   LangOptions DefaultLangOptions;
   IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts = new DiagnosticOptions();
   TextDiagnosticPrinter DiagnosticPrinter(llvm::errs(), &*DiagOpts);
@@ -156,7 +154,11 @@ int main(int argc, const char **argv)
 
 	if (apply_replacements)
 	{
-		commit_changes(rt, replacements);
+        Replacements rs;
+        for (const auto& r : replacements)
+            auto err = rs.add(r);
+		
+        commit_changes(rt, rs);
 	}
 
     return 0;
