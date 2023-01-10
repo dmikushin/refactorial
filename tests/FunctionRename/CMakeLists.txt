@@ -12,7 +12,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 add_custom_target(test
      DEPENDS ${PROJECT_NAME}
-     COMMAND ${REFACTORIAL} --spec ${CMAKE_CURRENT_SOURCE_DIR}/function_rename.yml
+     COMMAND ${REFACTORIAL} --spec ${CMAKE_CURRENT_SOURCE_DIR}/function_rename.yml --print --apply ./compile_commands.json
      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
      COMMENT "Testing FunctionRename")
 

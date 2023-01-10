@@ -1,6 +1,6 @@
 ---
 Transforms:
   FunctionRename:
-    Functions:
-      - SampleNameSpace::Foo::cycleWasteTest: wasteCycle
-      - SampleNameSpace::Foo::get(.+): \1
+    Renames:
+      - { From: 'SampleNameSpace::Foo::cycleWasteTest', To: 'wasteCycle' }
+      - { From: 'SampleNameSpace::Foo::get(.+):', To: '\1' }
