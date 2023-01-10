@@ -34,9 +34,10 @@ private:
 	std::vector<llvm::Regex> allowedDirectoryList;
 };
 
-template <typename T> std::unique_ptr<Transform> transform_factory()
+template<typename T>
+std::unique_ptr<Transform> transform_factory()
 {
-	return std::unique_ptr<T>(new T);
+	return std::make_unique<T>();
 }
 
 typedef std::unique_ptr<Transform> (*transform_creator)(void);

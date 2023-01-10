@@ -1,5 +1,7 @@
 #include "Transforms.h"
 
+#include "Replacer.h"
+
 #include <clang/AST/AST.h>
 #include <clang/AST/ParentMap.h>
 #include <clang/AST/RecursiveASTVisitor.h>
@@ -168,9 +170,9 @@ getLineIndentation(SourceLocation Loc, SourceManager *SourceMgr) {
   StringRef MB = SourceMgr->getBufferData(FID);
 
   unsigned lineNo = SourceMgr->getLineNumber(FID, StartOffs) - 1;
-  const SrcMgr::ContentCache *
+  const SrcMgr::ContentCache
       Content = SourceMgr->getSLocEntry(FID).getFile().getContentCache();
-  unsigned lineOffs = Content->SourceLineCache[lineNo];
+  unsigned lineOffs = Content.SourceLineCache[lineNo];
 
   // Find the whitespace at the start of the line.
   unsigned i = lineOffs;
@@ -194,7 +196,9 @@ private:
 
 public:
     AccessorsTransform() : stmtGraph(nullptr) {
-        const auto &accessors = TransformRegistry::get().config["Accessors"];
+        const auto &accessors = static_cast<refactorial::config::AccessorsTransformConfig*>(getTransformConfig())->accessors;
+#if 0
+        // TODO
         assert(accessors.IsSequence() &&
                "'Accessors' section is expected to be sequence");
 
@@ -215,7 +219,12 @@ public:
                 assert(!"'Accessors' section allows maps and scalars only");
             }
         }
+#endif
     }
+
+     refactorial::config::TransformConfig* getTransformConfig() override {
+         return &(TransformRegistry::get().config.transforms.accessors_transform);
+     }
 
 	void HandleTranslationUnit(ASTContext &ctx) override {
 		this->ctx = &ctx;
@@ -327,11 +336,11 @@ public:
 			}
 
 			auto range = SourceRange(
-				op->getLHS()->getLocStart(),
-				op->getRHS()->getLocStart());
+				op->getLHS()->getBeginLoc(),
+				op->getRHS()->getBeginLoc());
 
 			Replacer::instance().replaceText(range, prefix, ci->getSourceManager());
-			insertAfterToken(op->getLocEnd(), suffix);
+			insertAfterToken(op->getEndLoc(), suffix);
 
 			observed.insert(rv.expr);
 		}
@@ -451,9 +460,9 @@ private:
 			for (const auto *method : record->methods()) {
 				if (method->isUserProvided()) {
 					lineIndent = getLineIndentation(
-						method->getLocStart(),
+						method->getBeginLoc(),
 						&ci->getSourceManager());
-					insertLoc = getLocAfter(method->getLocEnd());
+					insertLoc = getLocAfter(method->getEndLoc());
 				}
 			}
 			if (insertLoc.isValid()) {
@@ -465,10 +474,10 @@ private:
 		}
 		if (indent) {
 			*indent = getLineIndentation(
-				decl->getLocStart(),
+				decl->getBeginLoc(),
 				&ci->getSourceManager());
 		}
-		return parent->getRBraceLoc();
+		return parent->getBraceRange().getEnd();
 	}
 
 	void insertAfterToken(SourceLocation loc, std::string text) {
@@ -493,3 +502,4 @@ private:
 };
 
 REGISTER_TRANSFORM(AccessorsTransform);
+

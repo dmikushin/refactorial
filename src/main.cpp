@@ -141,6 +141,7 @@ int main(int argc, const char **argv)
 	EXEC_TRANSFORM("RecordFieldRenameTransform", record_field_rename_transform)
 	EXEC_TRANSFORM("ExplicitConstructorTransform", explicit_constructor_transform)
 	EXEC_TRANSFORM("ArgumentChange", argument_change_transform)
+    EXEC_TRANSFORM("AccessorsTransform", accessors_transform)
 
     stable_deduplicate(replacements);
 

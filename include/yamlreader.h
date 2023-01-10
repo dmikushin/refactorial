@@ -21,6 +21,7 @@ namespace refactorial
 		{
 			std::vector<std::string> ignores;
 		};
+
 		struct Qt3To5UIClassesTransformConfig : TransformConfig {};
 
 		struct Rename
@@ -42,14 +43,19 @@ namespace refactorial
 			std::vector<Rename> renames;
 		};
 
-		struct ArgumentChangeTransformConfig : TransformConfig
-		{
-			std::vector<Change> changes;
-		};
-
 		struct FunctionRenameTransformConfig : RenameConfig {};
 		struct TypeRenameTransformConfig : RenameConfig {};
 		struct RecordFieldRenameTransformConfig : RenameConfig {};
+
+        struct ArgumentChangeTransformConfig : TransformConfig
+        {
+            std::vector<Change> changes;
+        };
+
+        struct AccessorsTransformConfig : TransformConfig
+        {
+            std::vector<std::string> accessors;
+        };
 
 		struct Transforms
 		{
@@ -59,6 +65,7 @@ namespace refactorial
 			ExplicitConstructorTransformConfig explicit_constructor_transform;
 			Qt3To5UIClassesTransformConfig qt3_to_5_ui_classes;
 			ArgumentChangeTransformConfig argument_change_transform;
+            AccessorsTransformConfig accessors_transform;
 		};
 
 		struct Config
@@ -286,6 +293,34 @@ namespace llvm
 			}
 		};
 
+        template <> struct MappingTraits<AccessorsTransformConfig> {
+            struct NormalizedAccessorsTransformConfig {
+                NormalizedAccessorsTransformConfig(IO& io) {}
+                NormalizedAccessorsTransformConfig(IO&, AccessorsTransformConfig& ect)
+                    : within_paths(ect.within_paths) {}
+                AccessorsTransformConfig denormalize(IO&) {
+                    AccessorsTransformConfig ect;
+ 
+                    for (const std::string& p : within_paths) {
+                        ect.within_paths.push_back(refactorial::util::absolutePath(p));
+                    }
+ 
+                    ect.accessors = accessors;
+                    return ect;
+                }
+ 
+                std::vector<std::string> within_paths;
+                std::vector<std::string> accessors;
+            };
+ 
+            static void mapping(IO& io, AccessorsTransformConfig& ect) {
+                MappingNormalization<NormalizedAccessorsTransformConfig, AccessorsTransformConfig> keys(io, ect);
+ 
+                io.mapOptional("WithinPaths", keys->within_paths);
+                io.mapRequired("Accessors", keys->accessors);
+            }
+        };
+
 		template <> struct MappingTraits<Transforms> {
 			static void mapping(IO& io, Transforms& t) {
 				io.mapOptional("TypeRename", t.type_rename_transform);
@@ -294,6 +329,7 @@ namespace llvm
 				io.mapOptional("ExplicitConstructor", t.explicit_constructor_transform);
 				io.mapOptional("Qt3To5UIClasses", t.qt3_to_5_ui_classes);
 				io.mapOptional("ArgumentChange", t.argument_change_transform);
+                io.mapOptional("AccessorsTransform", t.accessors_transform);
 			}
 		};
 
