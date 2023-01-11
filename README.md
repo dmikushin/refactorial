@@ -101,10 +101,10 @@ what each source transform does and which parameters they take.
 
 ## Copyright and License
 
-Copyright © 2012 Lukhnos Liu and Thomas Minor
-Copyright © 2014 Martin Zenzes
-Copyright © 2014, 2016 Artem Kotsynyak
-Copyright © 2016 Ryan Wersal
+Copyright © 2012 Lukhnos Liu and Thomas Minor  
+Copyright © 2014 Martin Zenzes  
+Copyright © 2014, 2016 Artem Kotsynyak  
+Copyright © 2016 Ryan Wersal  
 Copyright © 2023 Dmitry Mikushin
 
 Released under the MIT License.
