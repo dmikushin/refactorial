@@ -39,6 +39,9 @@ bool Transform::canChangeLocation(const clang::SourceLocation& loc) {
 		return false;
     }
 
+    if (allowedDirectoryList.empty())
+        return true;
+
     clang::SourceManager &SM = ci->getSourceManager();
     clang::FullSourceLoc FSL(loc, SM);
     const clang::FileEntry *FE = SM.getFileEntryForID(FSL.getFileID());
