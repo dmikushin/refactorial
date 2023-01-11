@@ -14,6 +14,7 @@ namespace refactorial
 	{
 		struct TransformConfig
 		{
+			bool used = false;
 			std::vector<std::string> within_paths;
 		};
 
@@ -22,7 +23,7 @@ namespace refactorial
 			std::vector<std::string> ignores;
 		};
 
-		struct Qt3To5UIClassesTransformConfig : TransformConfig {};
+		struct Qt3To5UIClassesTransformConfig : TransformConfig { };
 
 		struct Rename
 		{
@@ -43,9 +44,9 @@ namespace refactorial
 			std::vector<Rename> renames;
 		};
 
-		struct FunctionRenameTransformConfig : RenameConfig {};
-		struct TypeRenameTransformConfig : RenameConfig {};
-		struct RecordFieldRenameTransformConfig : RenameConfig {};
+		struct FunctionRenameTransformConfig : RenameConfig { };
+		struct TypeRenameTransformConfig : RenameConfig { };
+		struct RecordFieldRenameTransformConfig : RenameConfig { };
 
 		struct ArgumentChangeTransformConfig : TransformConfig
 		{
@@ -145,27 +146,28 @@ namespace llvm
 			{
 				NormalizedQt3To5UIClassesTransformConfig(IO& io) { }
 				
-				NormalizedQt3To5UIClassesTransformConfig(IO&, Qt3To5UIClassesTransformConfig& ect) :
-					within_paths(ect.within_paths) { }
+				NormalizedQt3To5UIClassesTransformConfig(IO&, Qt3To5UIClassesTransformConfig& qt) :
+					within_paths(qt.within_paths) { }
 
 				Qt3To5UIClassesTransformConfig denormalize(IO&)
 				{
-					Qt3To5UIClassesTransformConfig ect;
+					Qt3To5UIClassesTransformConfig qt;
 
 					for (const std::string& p : within_paths)
-						ect.within_paths.push_back(refactorial::util::absolutePath(p));
+						qt.within_paths.push_back(refactorial::util::absolutePath(p));
 
-					return ect;
+					qt.used = true;
+					return qt;
 				}
 
 				std::vector<std::string> within_paths;
 			};
 
-			static void mapping(IO& io, Qt3To5UIClassesTransformConfig& ect)
+			static void mapping(IO& io, Qt3To5UIClassesTransformConfig& qt)
 			{
 				MappingNormalization<
 					NormalizedQt3To5UIClassesTransformConfig,
-					Qt3To5UIClassesTransformConfig> keys(io, ect);
+					Qt3To5UIClassesTransformConfig> keys(io, qt);
 
 				io.mapOptional("WithinPaths", keys->within_paths);
 			}
@@ -189,7 +191,7 @@ namespace llvm
 						ect.within_paths.push_back(refactorial::util::absolutePath(p));
 
 					ect.ignores = ignores;
-
+					ect.used = true;
 					return ect;
 				}
 
@@ -226,6 +228,7 @@ namespace llvm
 						act.within_paths.push_back(refactorial::util::absolutePath(p));
 
 					act.changes = changes;
+					act.used = true;
 					return act;
 				}
 
@@ -262,6 +265,7 @@ namespace llvm
 						frt.within_paths.push_back(refactorial::util::absolutePath(p));
 
 					frt.renames = renames;
+					frt.used = true;
 					return frt;
 				}
 
@@ -298,6 +302,7 @@ namespace llvm
 						trt.within_paths.push_back(refactorial::util::absolutePath(p));
 
 					trt.renames = renames;
+					trt.used = true;
 					return trt;
 				}
 
@@ -334,6 +339,7 @@ namespace llvm
 						rfrt.within_paths.push_back(refactorial::util::absolutePath(p));
 
 					rfrt.renames = renames;
+					rfrt.used = true;
 					return rfrt;
 				}
 
@@ -359,29 +365,30 @@ namespace llvm
 			{
 				NormalizedAccessorsTransformConfig(IO& io) { }
 				
-				NormalizedAccessorsTransformConfig(IO&, AccessorsTransformConfig& ect) :
-					within_paths(ect.within_paths) { }
+				NormalizedAccessorsTransformConfig(IO&, AccessorsTransformConfig& at) :
+					within_paths(at.within_paths) { }
 				
 				AccessorsTransformConfig denormalize(IO&)
 				{
-					AccessorsTransformConfig ect;
+					AccessorsTransformConfig at;
 
 					for (const std::string& p : within_paths)
-						ect.within_paths.push_back(refactorial::util::absolutePath(p));
+						at.within_paths.push_back(refactorial::util::absolutePath(p));
 
-					ect.accessors = accessors;
-					return ect;
+					at.accessors = accessors;
+					at.used = true;
+					return at;
 				}
 
 				std::vector<std::string> within_paths;
 				std::vector<std::string> accessors;
 			};
 
-			static void mapping(IO& io, AccessorsTransformConfig& ect)
+			static void mapping(IO& io, AccessorsTransformConfig& at)
 			{
 				MappingNormalization<
 					NormalizedAccessorsTransformConfig,
-					AccessorsTransformConfig> keys(io, ect);
+					AccessorsTransformConfig> keys(io, at);
 
 				io.mapOptional("WithinPaths", keys->within_paths);
 				io.mapRequired("Accessors", keys->accessors);

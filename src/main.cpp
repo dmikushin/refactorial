@@ -145,10 +145,9 @@ int main(int argc, const char **argv)
             std::vector<Replacement> replacements;
             TransformRegistry::get().replacements = &replacements;
 
-            // FIXME: It would be ideal to rework the way Transforms get instantiated/injected so that we can ask the registry
-            // for the Transform and call methods off of it etc.
+            // Execute only "used" transforms - those, for which a YAML config has been provided.
             #define EXEC_TRANSFORM(transform_name, transform_config) \
-                if (!config.transforms.transform_config.within_paths.empty()) \
+                if (config.transforms.transform_config.used) \
                 { \
                     rt.run(new TransformFactory(TransformRegistry::get()[transform_name])); \
                 }
