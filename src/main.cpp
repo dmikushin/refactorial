@@ -9,6 +9,7 @@
 #include <execution>
 #include <iostream>
 #include <fstream>
+#include <map>
 
 #include "Transforms/Transforms.h"
 
@@ -173,11 +174,12 @@ int main(int argc, const char **argv)
 
 			if (apply_replacements)
 			{
-				Replacements rs;
+				std::map<llvm::StringRef, Replacements> rs;
 				for (const auto& r : replacements)
-					auto err = rs.add(r);
+					auto err = rs[r.getFilePath()].add(r);
 
-				commit_changes(rt, rs);
+				for (const auto& r : rs)
+					commit_changes(rt, r.second);
 			}
 		});
 	}
