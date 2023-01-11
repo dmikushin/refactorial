@@ -3,4 +3,4 @@ Transforms:
   FunctionRename:
     Renames:
       - { From: 'SampleNameSpace::Foo::cycleWasteTest', To: 'wasteCycle' }
-      - { From: 'SampleNameSpace::Foo::get(.+):', To: '\1' }
+      - { From: 'SampleNameSpace::Foo::get(.+)', To: '\1' }
