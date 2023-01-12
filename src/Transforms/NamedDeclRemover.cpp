@@ -1,6 +1,6 @@
 #include "NamedDeclRemover.h"
 #include "Transforms.h"
-#include "Remover.h"
+#include "Replacer.h"
 
 #include <clang/AST/Decl.h>
 #include <clang/AST/Stmt.h>
@@ -69,7 +69,7 @@ void NamedDeclRemover::removeLocation(clang::SourceLocation L, clang::SourceLoca
 
 	if (!canChangeLocation(L)) return;
 
-	Remover::instance().remove(clang::SourceRange(L, E), ci->getSourceManager());
+	Replacer::instance().replace(clang::SourceRange(L, E), "", ci->getSourceManager());
 }
 
 std::string NamedDeclRemover::loc(clang::SourceLocation L)

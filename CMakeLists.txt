@@ -28,8 +28,7 @@ add_executable(${PROJECT_NAME}
     src/Transforms/RemoveTransform.cpp
     src/Transforms/ArgumentChange.cpp
     src/Transforms/Transforms.cpp
-    src/Transforms/Replacer.cpp
-    src/Transforms/Remover.cpp)
+    src/Transforms/Replacer.cpp)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/Transforms)
 target_include_directories(${PROJECT_NAME} PRIVATE ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS} ${PCRECPP_INCLUDE_DIRS})
