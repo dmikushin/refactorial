@@ -1,5 +1,5 @@
-#ifndef NAMED_DECL_RENAMER_H
-#define NAMED_DECL_RENAMER_H
+#ifndef NAMED_DECL_REMOVER_H
+#define NAMED_DECL_REMOVER_H
 
 #include "Transforms.h"
 
@@ -30,7 +30,7 @@ class Regex;
 
 } // namespace llvm
 
-class NamedDeclRenamer : public Transform
+class NamedDeclRemover : public Transform
 {
 public :
 
@@ -49,21 +49,19 @@ private :
 
 	bool nameMatches(
 		const clang::NamedDecl *decl,
-		std::string &newName,
 		bool checkOnly = false);
 
-	void renameLocation(clang::SourceLocation L, std::string& N);
+	void removeLocation(clang::SourceLocation L, clang::SourceLocation E);
 
 	int indentLevel;
 	std::string indentString;
 
-	typedef std::pair<llvm::Regex, std::string> RegexStringPair;
-	std::vector<RegexStringPair> renameList;
+	std::vector<llvm::Regex> removeList;
 
-	std::map<const clang::Decl *, std::string> nameMap;
+	std::set<const clang::Decl *> nameMap;
 	std::map<std::string, std::string> matchedStringMap;
 	std::set<std::string> unmatchedStringSet;
 };
 
-#endif // NAMED_DECL_RENAMER_H
+#endif // NAMED_DECL_REMOVER_H
 

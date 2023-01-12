@@ -12,8 +12,9 @@
 
 using namespace clang;
 
-void NamedDeclRenamer::loadConfig(refactorial::config::RenameConfig* transform)
+void NamedDeclRenamer::loadConfig(refactorial::config::TransformConfig* transform_)
 {
+	auto transform = static_cast<refactorial::config::RenameConfig*>(transform_);
 	for (const refactorial::config::Rename& r : transform->renames)
 		renameList.push_back(RegexStringPair(llvm::Regex(r.from), r.to));
 }
@@ -131,5 +132,16 @@ void NamedDeclRenamer::renameLocation(clang::SourceLocation L, std::string& N)
 std::string NamedDeclRenamer::loc(clang::SourceLocation L)
 {
 	return L.printToString(ci->getSourceManager());
+}
+
+bool NamedDeclRenamer::setResult(const NamedDecl *Decl,
+	SourceLocation Start, SourceLocation End)
+{
+	std::string NewName;
+	const NamedDecl *ED = this->getEffectiveDecl(Decl);
+	if (ED && nameMatches(ED, NewName, false))
+		renameLocation(Start, NewName);
+
+	return true;
 }
 

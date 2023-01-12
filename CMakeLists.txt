@@ -23,11 +23,13 @@ add_executable(${PROJECT_NAME}
     src/Transforms/Qt3To5UIClasses.cpp
     src/Transforms/ExplicitConstructorTransform.cpp
     src/Transforms/NamedDeclRenamer.cpp
+    src/Transforms/NamedDeclRemover.cpp
     src/Transforms/RenameTransform.cpp
     src/Transforms/RemoveTransform.cpp
     src/Transforms/ArgumentChange.cpp
     src/Transforms/Transforms.cpp
-    src/Transforms/Replacer.cpp)
+    src/Transforms/Replacer.cpp
+    src/Transforms/Remover.cpp)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/Transforms)
 target_include_directories(${PROJECT_NAME} PRIVATE ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS} ${PCRECPP_INCLUDE_DIRS})

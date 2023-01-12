@@ -11,14 +11,21 @@ using namespace clang;
 // symbol underneath the cursor.
 namespace {
 
-class NamedDeclVisitor : public NamedDeclRenamer, public RecursiveASTVisitor<NamedDeclVisitor>
+template<typename NamedDeclChanger>
+class NamedDeclVisitor :
+	public NamedDeclChanger,
+	public RecursiveASTVisitor<NamedDeclVisitor<NamedDeclChanger> >
 {
+	using RASTV = RecursiveASTVisitor<NamedDeclVisitor<NamedDeclChanger> >;
+
 public :
+
+	virtual refactorial::config::TransformConfig* getTransformConfig() override = 0;
 
 	void HandleTranslationUnit(ASTContext &C) override
 	{
-		loadConfig(static_cast<refactorial::config::RenameConfig*>(getTransformConfig()));
-		this->TraverseDecl(C.getTranslationUnitDecl());
+		NamedDeclChanger::loadConfig(getTransformConfig());
+		RASTV::TraverseDecl(C.getTranslationUnitDecl());
 	}
 
 	// Declaration visitors:
@@ -96,32 +103,32 @@ public :
     		}
     		
 		if (Decl)
-			return setResult(Decl, TL.getBeginLoc(), TL.getEndLoc());
+			return NamedDeclChanger::setResult(Decl, TL.getBeginLoc(), TL.getEndLoc());
 
 		return true;
 	}
 
 	bool TraverseClassTemplateSpecializationDecl(ClassTemplateSpecializationDecl *D)
 	{
-		if (!WalkUpFromClassTemplateSpecializationDecl(D))
+		if (!RASTV::WalkUpFromClassTemplateSpecializationDecl(D))
 			return false;
 
 		if (TypeSourceInfo *TSI = D->getTypeAsWritten())
-			if (!TraverseTypeLoc(TSI->getTypeLoc()))
+			if (!RASTV::TraverseTypeLoc(TSI->getTypeLoc()))
 				return false;
 
-		if (!getDerived().shouldVisitTemplateInstantiations() &&
+		if (!RASTV::getDerived().shouldVisitTemplateInstantiations() &&
 			D->getTemplateSpecializationKind() != TSK_ExplicitSpecialization)
 				return true;
 
-		if (!TraverseNestedNameSpecifierLoc(D->getQualifierLoc()))
+		if (!RASTV::TraverseNestedNameSpecifierLoc(D->getQualifierLoc()))
 			return false;
 
 		if (D->isCompleteDefinition())
 		{
 			for (const auto &I : D->bases())
 			{
-				if (!TraverseTypeLoc(I.getTypeSourceInfo()->getTypeLoc()))
+				if (!RASTV::TraverseTypeLoc(I.getTypeSourceInfo()->getTypeLoc()))
 					return false;
 			}
 		}
@@ -141,14 +148,12 @@ public :
 			// BlockDecls and CapturedDecls are traversed through BlockExprs and
 			// CapturedStmts respectively.
 			if (!isa<BlockDecl>(Child) && !isa<CapturedDecl>(Child))
-				if (!TraverseDecl(Child))
+				if (!RASTV::TraverseDecl(Child))
 					return false;
 		}
 
 		return true;
 	}
-
-	virtual const NamedDecl *getEffectiveDecl(const NamedDecl *Decl) = 0;
 
 private :
 
@@ -167,22 +172,11 @@ private :
 		return true;
 	}
 
-	bool setResult(const NamedDecl *Decl,
-		SourceLocation Start, SourceLocation End)
-	{
-		std::string NewName;
-		const NamedDecl *ED = this->getEffectiveDecl(Decl);
-		if (ED && nameMatches(ED, NewName, false))
-			renameLocation(Start, NewName);
-
-		return true;
-	}
-
 	bool setResult(const NamedDecl *Decl, SourceLocation Loc,
 		unsigned Offset)
 	{
 		// FIXME: Add test for Offset == 0. Add test for Offset - 1 (vs -2 etc).
-		return Offset == 0 || setResult(Decl, Loc, Loc.getLocWithOffset(Offset - 1));
+		return Offset == 0 || NamedDeclChanger::setResult(Decl, Loc, Loc.getLocWithOffset(Offset - 1));
 	}
 };
 

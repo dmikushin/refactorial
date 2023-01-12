@@ -7,11 +7,11 @@
 using namespace llvm;
 using namespace clang;
 
-class TypeRenameTransform : public NamedDeclVisitor
+class TypeRenameTransform : public NamedDeclVisitor<NamedDeclRenamer>
 {
 public :
 
-	TypeRenameTransform() : NamedDeclVisitor()
+	TypeRenameTransform() : NamedDeclVisitor<NamedDeclRenamer>()
 	{
   		init();
 	}
@@ -35,11 +35,11 @@ public :
 	}
 };
 
-class FunctionRenameTransform : public NamedDeclVisitor
+class FunctionRenameTransform : public NamedDeclVisitor<NamedDeclRenamer>
 {
 public :
 
-	FunctionRenameTransform() : NamedDeclVisitor()
+	FunctionRenameTransform() : NamedDeclVisitor<NamedDeclRenamer>()
 	{
 		init();
 	}
@@ -62,11 +62,11 @@ public :
 	}
 };
 
-class RecordFieldRenameTransform : public NamedDeclVisitor
+class RecordFieldRenameTransform : public NamedDeclVisitor<NamedDeclRenamer>
 {
 public :
 
-	RecordFieldRenameTransform() : NamedDeclVisitor()
+	RecordFieldRenameTransform() : NamedDeclVisitor<NamedDeclRenamer>()
 	{
 		init();
 	}

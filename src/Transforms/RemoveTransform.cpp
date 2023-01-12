@@ -1,4 +1,4 @@
-#include "NamedDeclRenamer.h"
+#include "NamedDeclRemover.h"
 #include "Transforms.h"
 #include "NamedDeclVisitor.h"
 
@@ -7,11 +7,11 @@
 using namespace llvm;
 using namespace clang;
 
-class TypeRemoveTransform : public NamedDeclVisitor
+class TypeRemoveTransform : public NamedDeclVisitor<NamedDeclRemover>
 {
 public :
 
-	TypeRemoveTransform() : NamedDeclVisitor()
+	TypeRemoveTransform() : NamedDeclVisitor<NamedDeclRemover>()
 	{
 		init();
 	}
@@ -35,11 +35,11 @@ public :
 	}
 };
 
-class FunctionRemoveTransform : public NamedDeclVisitor
+class FunctionRemoveTransform : public NamedDeclVisitor<NamedDeclRemover>
 {
 public :
 
-	FunctionRemoveTransform() : NamedDeclVisitor()
+	FunctionRemoveTransform() : NamedDeclVisitor<NamedDeclRemover>()
 	{
 		init();
 	}
@@ -62,11 +62,11 @@ public :
 	}
 };
 
-class RecordFieldRemoveTransform : public NamedDeclVisitor
+class RecordFieldRemoveTransform : public NamedDeclVisitor<NamedDeclRemover>
 {
 public :
 
-	RecordFieldRemoveTransform() : NamedDeclVisitor()
+	RecordFieldRemoveTransform() : NamedDeclVisitor<NamedDeclRemover>()
 	{
 		init();
 	}

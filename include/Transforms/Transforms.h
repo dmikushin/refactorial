@@ -1,5 +1,5 @@
-#ifndef TRANSFORM_H
-#define TRANSFORM_H
+#ifndef TRANSFORMS_H
+#define TRANSFORMS_H
 
 #include <string>
 #include <vector>
@@ -15,7 +15,8 @@
 
 class Transform : public clang::ASTConsumer
 {
-public:
+public :
+
 	virtual refactorial::config::TransformConfig* getTransformConfig() = 0;
 
 	clang::SourceLocation findLocAfterToken(clang::SourceLocation curLoc, clang::tok::TokenKind tok);
@@ -26,10 +27,12 @@ public:
 
 	clang::CompilerInstance *ci;
 
-protected:
+protected :
+
 	virtual void init();
 
-private:
+private :
+
 	std::vector<llvm::Regex> allowedDirectoryList;
 };
 
@@ -43,9 +46,10 @@ typedef std::unique_ptr<Transform> (*transform_creator)(void);
 
 class TransformRegistry
 {
- private:
 	std::map<std::string,transform_creator> m_transforms;
- public:
+
+public :
+
 	refactorial::config::Config config;
 	std::map<std::string, std::string> touchedFiles;
 	std::vector<clang::tooling::Replacement> *replacements;
@@ -57,20 +61,26 @@ class TransformRegistry
 
 class TransformRegistration
 {
-public:
-	TransformRegistration(const std::string& name, transform_creator creator) {
+public :
+
+	TransformRegistration(const std::string& name, transform_creator creator)
+	{
 		TransformRegistry::get().add(name, creator);
 	}
 };
 
-#define REGISTER_TRANSFORM(transform)	  TransformRegistration _transform_registration_ ## transform(#transform, &transform_factory<transform>)
+#define REGISTER_TRANSFORM(transform) \
+	TransformRegistration _transform_registration_ ## transform(#transform, &transform_factory<transform>)
 
-class TransformFactory : public clang::tooling::FrontendActionFactory {
-private:
+class TransformFactory : public clang::tooling::FrontendActionFactory
+{
 	transform_creator tcreator;
-public:
+
+public :
+
 	TransformFactory(transform_creator creator);
-    std::unique_ptr<clang::FrontendAction> create();
+	std::unique_ptr<clang::FrontendAction> create();
 };
 
-#endif
+#endif // TRANSFORMS_H
+
