@@ -39,18 +39,9 @@ public :
 		std::string &newName,
 		bool checkOnly = false);
 
-	bool stringMatches(std::string name, std::string &outNewName);
-
-	bool stmtInSameFileAsDecl(clang::Stmt *S, clang::Decl *D);
-
 	void renameLocation(clang::SourceLocation L, std::string& N);
 
-	const std::string& indent();
-	void pushIndent();
-	void popIndent();
-
 	std::string loc(clang::SourceLocation L);
-	std::string range(clang::SourceRange R);
 
 private :
 

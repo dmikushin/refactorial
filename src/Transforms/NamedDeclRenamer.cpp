@@ -65,43 +65,6 @@ bool NamedDeclRenamer::nameMatches(
 	return false;
 }
 
-// useful when we can't just rely on Decl, e.g. built-in type
-// unmatched names are cached to speed things up
-bool NamedDeclRenamer::stringMatches(std::string name, std::string &outNewName)
-{
-	auto I = matchedStringMap.find(name);
-	if (I != matchedStringMap.end())
-	{
-		outNewName = (*I).second;
-		return true;
-	}
-
-	auto J = unmatchedStringSet.find(name);
-	if (J != unmatchedStringSet.end())
-		return false;
-
-	llvm::SmallVector<llvm::StringRef, 2> matched;
-	for (auto I = renameList.begin(), E = renameList.end(); I != E; ++I)
-	{
-		if (I->first.match(name, &matched))
-		{
-			auto newName = matched[0];
-			matchedStringMap[name] = newName;
-			outNewName = newName;
-			return true;
-		}
-	}
-
-	unmatchedStringSet.insert(name);
-	return false;
-}
-
-bool NamedDeclRenamer::stmtInSameFileAsDecl(clang::Stmt *S, clang::Decl *D)
-{
-	return ci->getSourceManager().isWrittenInSameFile(
-		S->getBeginLoc(), D->getLocation());
-}
-
 void NamedDeclRenamer::renameLocation(clang::SourceLocation L, std::string& N)
 {
 	if (!L.isValid()) return;
@@ -165,38 +128,8 @@ void NamedDeclRenamer::renameLocation(clang::SourceLocation L, std::string& N)
 	}
 }
 
-const std::string& NamedDeclRenamer::indent()
-{
-	return indentString;
-}
-
-void NamedDeclRenamer::pushIndent()
-{
-	indentLevel++;
-	indentString.resize(indentString.size() + 2, ' ');
-}
-
-void NamedDeclRenamer::popIndent()
-{
-	assert(indentLevel >= 0 && "indentLevel must be >= 0");
-	indentLevel--;
-	indentString.resize(indentString.size() - 2);
-}
-
 std::string NamedDeclRenamer::loc(clang::SourceLocation L)
 {
 	return L.printToString(ci->getSourceManager());
-}
-
-std::string NamedDeclRenamer::range(clang::SourceRange R)
-{
-	std::string src;
-	llvm::raw_string_ostream sst(src);
-	sst << "(";
-	R.getBegin().print(sst, ci->getSourceManager());
-	sst << ", ";
-	R.getEnd().print(sst, ci->getSourceManager());
-	sst << ")";
-	return sst.str();
 }
 

@@ -29,11 +29,6 @@ clang::SourceLocation Transform::getLocForEndOfToken(clang::SourceLocation curLo
 		curLoc, 0, ci->getSourceManager(), ci->getLangOpts());
 }
 
-clang::SourceLocation Transform::findLocAfterSemi(clang::SourceLocation curLoc)
-{
-	return findLocAfterToken(curLoc, clang::tok::semi);
-}
-
 void Transform::addAllowedPath(const std::string& path)
 {
 	std::string regex = llvm::Regex::escape(path);

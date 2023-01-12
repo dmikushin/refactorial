@@ -20,7 +20,6 @@ public:
 
 	clang::SourceLocation findLocAfterToken(clang::SourceLocation curLoc, clang::tok::TokenKind tok);
 	clang::SourceLocation getLocForEndOfToken(clang::SourceLocation curLoc);
-	clang::SourceLocation findLocAfterSemi(clang::SourceLocation curLoc);
 
 	void addAllowedPath(const std::string& path);
 	bool canChangeLocation(const clang::SourceLocation& loc);

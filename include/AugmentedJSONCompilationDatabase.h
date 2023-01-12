@@ -14,9 +14,6 @@ namespace tooling {
         std::vector<std::string> additional_cmds;
 
     public:
-        AugmentedJSONCompilationDatabase(
-                JSONCompilationDatabase* json_db,
-                FixedCompilationDatabase* fixed_db);
 
         ~AugmentedJSONCompilationDatabase();
 

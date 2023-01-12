@@ -13,28 +13,6 @@
 namespace clang {
 namespace tooling {
 
-AugmentedJSONCompilationDatabase::AugmentedJSONCompilationDatabase(
-                JSONCompilationDatabase* json_db,
-                FixedCompilationDatabase* fixed_db) :
-            json_db(json_db)
-{
-    if (fixed_db) {
-        std::vector<CompileCommand> compiles = fixed_db->getCompileCommands("");
-        if (compiles.size() != 1) {
-            llvm::errs() << "angry bark!";
-            exit(-1);
-        }
-
-        // copy all extracted commands, but skip the first element, which holds "clang-tool"
-        const std::vector<std::string>& commands = compiles.front().CommandLine;
-        std::vector<std::string>::const_iterator it;
-        for(it=commands.begin();it!=commands.end();++it) {
-            if (*it != "clang-tool")
-                additional_cmds.push_back(*it);
-        }
-    }
-}
-
 AugmentedJSONCompilationDatabase::~AugmentedJSONCompilationDatabase()
 {
     if (json_db)
