@@ -114,7 +114,7 @@ int main(int argc, const char **argv)
 	std::vector<std::function<void()>> tasks;
 
 	auto && sources = optionsParser.getCompilations().getAllFiles();
-	const size_t total = std::size(sources);
+	const size_t total = sources.size();
 
 	std::ifstream spec_stream(specfile_path);
 	if (!spec_stream.is_open())
