@@ -1,0 +1,6 @@
+---
+Transforms:
+  FunctionRemove:
+    RemoveUnused: true
+    Removes:
+      - 'SampleNameSpace::Foo::get.+'

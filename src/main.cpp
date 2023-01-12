@@ -154,13 +154,18 @@ int main(int argc, const char **argv)
 				{ \
 					rt.run(new TransformFactory(TransformRegistry::get()[transform_name])); \
 				}
-	
+
+			// TODO Each transform should run in a replacement facility alone,
+			// so we need to run them one by one.	
 			EXEC_TRANSFORM("Qt3To5UIClasses", qt3_to_5_ui_classes)
 			EXEC_TRANSFORM("TypeRenameTransform", type_rename_transform)
 			EXEC_TRANSFORM("FunctionRenameTransform", function_rename_transform)
+			EXEC_TRANSFORM("FunctionRemoveTransform", function_remove_transform)
 			EXEC_TRANSFORM("RecordFieldRenameTransform", record_field_rename_transform)
 			EXEC_TRANSFORM("ExplicitConstructorTransform", explicit_constructor_transform)
 			EXEC_TRANSFORM("ArgumentChange", argument_change_transform)
+			
+			// TODO Is not a replacement, so should not be here.
 			EXEC_TRANSFORM("AccessorsTransform", accessors_transform)
 
 			stable_deduplicate(replacements);

@@ -48,6 +48,14 @@ namespace refactorial
 		struct TypeRenameTransformConfig : RenameConfig { };
 		struct RecordFieldRenameTransformConfig : RenameConfig { };
 
+		struct RemoveConfig : TransformConfig
+		{
+			std::vector<std::string> removes;
+			bool remove_unused;
+		};
+
+		struct FunctionRemoveTransformConfig : RemoveConfig { };
+
 		struct ArgumentChangeTransformConfig : TransformConfig
 		{
 			std::vector<Change> changes;
@@ -62,6 +70,7 @@ namespace refactorial
 		{
 			TypeRenameTransformConfig type_rename_transform;
 			FunctionRenameTransformConfig function_rename_transform;
+			FunctionRemoveTransformConfig function_remove_transform;
 			RecordFieldRenameTransformConfig record_field_rename_transform;
 			ExplicitConstructorTransformConfig explicit_constructor_transform;
 			Qt3To5UIClassesTransformConfig qt3_to_5_ui_classes;
@@ -285,6 +294,46 @@ namespace llvm
 		};
 
 		template<>
+		struct MappingTraits<FunctionRemoveTransformConfig>
+		{
+			struct NormalizedFunctionRemoveTransformConfig
+			{
+				NormalizedFunctionRemoveTransformConfig(IO& io) { }
+				
+				NormalizedFunctionRemoveTransformConfig(IO&, FunctionRemoveTransformConfig& frt) :
+					within_paths(frt.within_paths) { }
+
+				FunctionRemoveTransformConfig denormalize(IO&)
+				{
+					FunctionRemoveTransformConfig frt;
+
+					for (const std::string& p : within_paths)
+						frt.within_paths.push_back(refactorial::util::absolutePath(p));
+
+					frt.removes = removes;
+					frt.remove_unused = remove_unused;
+					frt.used = true;
+					return frt;
+				}
+
+				std::vector<std::string> within_paths;
+				std::vector<std::string> removes;
+				bool remove_unused;
+			};
+
+			static void mapping(IO& io, FunctionRemoveTransformConfig& frt)
+			{
+				MappingNormalization<
+					NormalizedFunctionRemoveTransformConfig,
+					FunctionRemoveTransformConfig> keys(io, frt);
+
+				io.mapOptional("WithinPaths", keys->within_paths);
+				io.mapOptional("Removes", keys->removes);
+				io.mapRequired("RemoveUnused", keys->remove_unused);
+			}
+		};
+
+		template<>
 		struct MappingTraits<TypeRenameTransformConfig>
 		{
 			struct NormalizedTypeRenameTransformConfig
@@ -402,6 +451,7 @@ namespace llvm
 			{
 				io.mapOptional("TypeRename", t.type_rename_transform);
 				io.mapOptional("FunctionRename", t.function_rename_transform);
+				io.mapOptional("FunctionRemove", t.function_remove_transform);
 				io.mapOptional("RecordFieldRename", t.record_field_rename_transform);
 				io.mapOptional("ExplicitConstructor", t.explicit_constructor_transform);
 				io.mapOptional("Qt3To5UIClasses", t.qt3_to_5_ui_classes);

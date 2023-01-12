@@ -7,13 +7,13 @@
 using namespace llvm;
 using namespace clang;
 
-class TypeRenameTransform : public NamedDeclVisitor
+class TypeRemoveTransform : public NamedDeclVisitor
 {
 public :
 
-	TypeRenameTransform() : NamedDeclVisitor()
+	TypeRemoveTransform() : NamedDeclVisitor()
 	{
-  		init();
+		init();
 	}
 
 	refactorial::config::TransformConfig* getTransformConfig() override
@@ -35,18 +35,18 @@ public :
 	}
 };
 
-class FunctionRenameTransform : public NamedDeclVisitor
+class FunctionRemoveTransform : public NamedDeclVisitor
 {
 public :
 
-	FunctionRenameTransform() : NamedDeclVisitor()
+	FunctionRemoveTransform() : NamedDeclVisitor()
 	{
 		init();
 	}
 
 	refactorial::config::TransformConfig* getTransformConfig() override
 	{
-		return &(TransformRegistry::get().config.transforms.function_rename_transform);
+		return &(TransformRegistry::get().config.transforms.function_remove_transform);
 	}
 
 	const NamedDecl *getEffectiveDecl(const NamedDecl *Decl) override
@@ -62,11 +62,11 @@ public :
 	}
 };
 
-class RecordFieldRenameTransform : public NamedDeclVisitor
+class RecordFieldRemoveTransform : public NamedDeclVisitor
 {
 public :
 
-	RecordFieldRenameTransform() : NamedDeclVisitor()
+	RecordFieldRemoveTransform() : NamedDeclVisitor()
 	{
 		init();
 	}
@@ -82,9 +82,9 @@ public :
 	}
 };
 
-REGISTER_TRANSFORM(TypeRenameTransform);
-REGISTER_TRANSFORM(FunctionRenameTransform);
-REGISTER_TRANSFORM(RecordFieldRenameTransform);
+REGISTER_TRANSFORM(TypeRemoveTransform);
+REGISTER_TRANSFORM(FunctionRemoveTransform);
+REGISTER_TRANSFORM(RecordFieldRemoveTransform);
 
 }
 

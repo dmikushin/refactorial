@@ -22,8 +22,9 @@ add_executable(${PROJECT_NAME}
     # src/Transforms/MethodMoveTransform.cpp
     src/Transforms/Qt3To5UIClasses.cpp
     src/Transforms/ExplicitConstructorTransform.cpp
-    src/Transforms/NamedDeclMatcher.cpp
+    src/Transforms/NamedDeclRenamer.cpp
     src/Transforms/RenameTransform.cpp
+    src/Transforms/RemoveTransform.cpp
     src/Transforms/ArgumentChange.cpp
     src/Transforms/Transforms.cpp
     src/Transforms/Replacer.cpp)
@@ -54,3 +55,9 @@ add_custom_target(test_function_rename
      COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRename
      COMMENT "Testing FunctionRename")
 
+add_custom_target(test_function_remove
+      DEPENDS ${PROJECT_NAME}
+      COMMAND ${CMAKE_COMMAND} -S ${CMAKE_CURRENT_SOURCE_DIR}/tests/FunctionRemove -B${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRemove -DREFACTORIAL=$<TARGET_FILE:${PROJECT_NAME}> -DCMAKE_CXX_COMPILER=${LLVM_TOOLS_BINARY_DIR}/clang++${CMAKE_EXECUTABLE_SUFFIX}
+      COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRemove --target test
+      COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRemove
+      COMMENT "Testing FunctionRemove")
