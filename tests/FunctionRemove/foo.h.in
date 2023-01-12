@@ -18,6 +18,8 @@ namespace SampleNameSpace {
     }
 
     int getX() const;
+    int getY();
+
     const Foo* getNext() const { return next; }
     void setX(int newX) {
       x = newX;

@@ -40,6 +40,10 @@ Foo test(Foo *a) {
   return Foo(a);
 }
 
+int Foo::getY() {
+  return x;
+}
+
 ::SampleNameSpace::Foo globalFoo;
 
 int main() {
@@ -54,5 +58,5 @@ int main() {
   Foo a = test();
   Bar b;
   b.test();
-  return a.getX();
+  return 0;
 }

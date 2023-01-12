@@ -69,23 +69,7 @@ void NamedDeclRemover::removeLocation(clang::SourceLocation L, clang::SourceLoca
 
 	if (!canChangeLocation(L)) return;
 
-	// TODO
-	clang::Preprocessor &P = ci->getPreprocessor();
-	auto LE = P.getLocForEndOfToken(L);
-	if (LE.isValid())
-	{
-		// getLocWithOffset returns the location *past* the token, hence -1
-		auto E = LE.getLocWithOffset(-1);
-
-		// TODO: Determine if it's a writable file
-
-		// TODO: Determine if the location has already been touched or
-		// needs skipping (such as in refactoring API user's code, then
-		// the API headers need no changing since later the new API will be
-		// in place)
-
-		Remover::instance().remove(clang::SourceRange(L, E), ci->getSourceManager());
-	}
+	Remover::instance().remove(clang::SourceRange(L, E), ci->getSourceManager());
 }
 
 std::string NamedDeclRemover::loc(clang::SourceLocation L)
@@ -98,7 +82,12 @@ bool NamedDeclRemover::setResult(const NamedDecl *Decl,
 {
 	const NamedDecl *ED = this->getEffectiveDecl(Decl);
 	if (ED && nameMatches(ED, false))
-		removeLocation(Start, End);
+	{
+		if (const FunctionDecl *FD = dyn_cast<const FunctionDecl>(Decl))
+			removeLocation(FD->getSourceRange().getBegin(), FD->getSourceRange().getEnd());
+		else
+			printf("Sorry, not a FunctionDecl, kind = \"%s\"\n", Decl->getDeclKindName());
+	}
 
 	return true;
 }

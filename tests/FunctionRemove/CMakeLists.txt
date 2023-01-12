@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(function_rename CXX)
+project(function_remove CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -14,5 +14,5 @@ add_custom_target(test
      DEPENDS ${PROJECT_NAME}
      COMMAND ${REFACTORIAL} --spec ${CMAKE_CURRENT_SOURCE_DIR}/function_remove.yml --print --apply ./compile_commands.json
      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-     COMMENT "Testing FunctionRename")
+     COMMENT "Testing FunctionRemove")
 
