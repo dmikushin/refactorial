@@ -85,8 +85,10 @@ bool NamedDeclRemover::setResult(const NamedDecl *Decl,
 	{
 		if (const FunctionDecl *FD = dyn_cast<const FunctionDecl>(Decl))
 			removeLocation(FD->getSourceRange().getBegin(), FD->getSourceRange().getEnd());
+		else if (const FunctionTemplateDecl *FTD = dyn_cast<const FunctionTemplateDecl>(Decl))
+			removeLocation(FTD->getSourceRange().getBegin(), FTD->getSourceRange().getEnd());
 		else
-			printf("Sorry, not a FunctionDecl, kind = \"%s\"\n", Decl->getDeclKindName());
+			fprintf(stderr, "Unsupported declaration kind: \"%s\"\n", Decl->getDeclKindName());
 	}
 
 	return true;
