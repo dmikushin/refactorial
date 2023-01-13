@@ -51,7 +51,7 @@ public:
 				range = call->getSourceRange();
 			}
 
-			Replacer::instance().replace(range, new_src, *(result.SourceManager));
+			Replacer::instance().replace(range, "", new_src, *(result.SourceManager));
 
 		} else if (const clang::CXXConstructExpr* ctor = result.Nodes.getNodeAs<clang::CXXConstructExpr>("ctor")) {
 			clang::SourceLocation loc = ctor->getBeginLoc();
@@ -72,7 +72,7 @@ public:
 
 			auto new_src = generateNewSource(matched_change, args);
 			clang::SourceRange range(ctor->getArg(0)->getExprLoc(), ctor->getParenOrBraceRange().getEnd().getLocWithOffset(-1));
-			Replacer::instance().replace(range, new_src, *(result.SourceManager));
+			Replacer::instance().replace(range, "", new_src, *(result.SourceManager));
 		}
 	}
 

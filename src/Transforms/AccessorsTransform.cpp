@@ -282,13 +282,13 @@ public:
 			if (outmost == op) {
 				Replacer::instance().replace(
 					op->getSourceRange(),
-					rv.methods->exprMod(accessPrefix(rv.expr), opStr),
+					"", rv.methods->exprMod(accessPrefix(rv.expr), opStr),
 					ci->getSourceManager());
 				observed.insert(rv.expr);
 			} else if (op->isPrefix()) {
 				Replacer::instance().replace(
 					op->getSourceRange(),
-					rv.methods->exprModGet(accessPrefix(rv.expr), opStr),
+					"", rv.methods->exprModGet(accessPrefix(rv.expr), opStr),
 					ci->getSourceManager());
 				observed.insert(rv.expr);
 			} else {
@@ -339,7 +339,7 @@ public:
 				op->getLHS()->getBeginLoc(),
 				op->getRHS()->getBeginLoc());
 
-			Replacer::instance().replaceText(range, prefix, ci->getSourceManager());
+			Replacer::instance().replaceText(range, "", prefix, ci->getSourceManager());
 			insertAfterToken(op->getEndLoc(), suffix);
 
 			observed.insert(rv.expr);
@@ -352,7 +352,7 @@ public:
 			return true;
 		}
 		if (auto rv = findAccessors(e)) {
-			Replacer::instance().replace(e->getSourceRange(), rv.methods->exprGet(accessPrefix(e)), ci->getSourceManager());
+			Replacer::instance().replace(e->getSourceRange(), "", rv.methods->exprGet(accessPrefix(e)), ci->getSourceManager());
 		}
 		return true;
 	}

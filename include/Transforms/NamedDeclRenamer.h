@@ -49,10 +49,12 @@ private :
 
 	bool nameMatches(
 		const clang::NamedDecl *decl,
-		std::string &newName,
+		std::string& nameOld, std::string& nameNew,
 		bool checkOnly = false);
 
-	void renameLocation(clang::SourceLocation L, std::string& N);
+	void renameLocation(
+		clang::SourceLocation L,
+		const std::string& nameOld, const std::string& nameNew);
 
 	int indentLevel;
 	std::string indentString;
@@ -61,8 +63,6 @@ private :
 	std::vector<RegexStringPair> renameList;
 
 	std::map<const clang::Decl *, std::string> nameMap;
-	std::map<std::string, std::string> matchedStringMap;
-	std::set<std::string> unmatchedStringSet;
 };
 
 #endif // NAMED_DECL_RENAMER_H

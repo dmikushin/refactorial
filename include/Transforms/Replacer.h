@@ -15,9 +15,15 @@ public :
 		return instance;
 	}
 
-	void insert(const clang::SourceLocation& loc, const std::string& text, clang::SourceManager& sourceManager);
-	void replace(const clang::SourceRange& range, const std::string& text, clang::SourceManager& sourceManager);
-	void replaceText(const clang::SourceRange& range, const std::string& text, clang::SourceManager& sourceManager);
+	void insert(const clang::SourceLocation& loc,
+		const std::string& text,
+		clang::SourceManager& sourceManager);
+	void replace(const clang::SourceRange& range,
+		const std::string& textOld, const std::string& textNew,
+		clang::SourceManager& sourceManager);
+	void replaceText(const clang::SourceRange& range,
+		const std::string& textOld, const std::string& textNew,
+		clang::SourceManager& sourceManager);
 
 protected :
 

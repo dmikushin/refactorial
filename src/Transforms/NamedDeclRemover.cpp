@@ -43,9 +43,12 @@ void NamedDeclRemover::loadConfig(refactorial::config::TransformConfig* transfor
   // if we have a NamedDecl and the fully-qualified name matches
 bool NamedDeclRemover::nameMatches(
 	const clang::NamedDecl *D,
+	std::string& name,
 	bool checkOnly)
 {
 	if (!D) return false;
+
+	name = D->getQualifiedNameAsString();
 
 	if (nameMap.find(D) != nameMap.end())
 		return true;
@@ -56,22 +59,21 @@ bool NamedDeclRemover::nameMatches(
 
 	if (!D->getLocation().isValid()) return false;
 
-	auto QN = D->getQualifiedNameAsString();
-	if (QN.size() == 0) return false;
+	if (name.size() == 0) return false;
 	
 	// special handling for TagDecl
 	if (auto T = llvm::dyn_cast<clang::TagDecl>(D))
 	{
 		auto KN = T->getKindName();
 		assert(!KN.empty() && "getKindName() must return a non-empty name");
-		QN.insert(0, KN);
-		QN.insert(KN.size(), " ");
+		name.insert(0, KN);
+		name.insert(KN.size(), " ");
 	}
 
 	llvm::SmallVector<llvm::StringRef, 10> matched;
 	for (auto& I : removeList)
 	{
-		if (I.name.match(I.mangled ? getMangledName(D) : QN, &matched))
+		if (I.name.match(I.mangled ? getMangledName(D) : name, &matched))
 		{
 			nameMap.insert(D);
 			return true;
@@ -81,7 +83,9 @@ bool NamedDeclRemover::nameMatches(
 	return false;
 }
 
-void NamedDeclRemover::removeLocation(clang::SourceLocation L, clang::SourceLocation E)
+void NamedDeclRemover::removeLocation(
+	clang::SourceLocation L, clang::SourceLocation E,
+	const std::string& name)
 {
 	if (!L.isValid()) return;
     
@@ -89,7 +93,7 @@ void NamedDeclRemover::removeLocation(clang::SourceLocation L, clang::SourceLoca
 
 	if (!canChangeLocation(L)) return;
 
-	Replacer::instance().replace(clang::SourceRange(L, E), "", ci->getSourceManager());
+	Replacer::instance().replace(clang::SourceRange(L, E), name, "", ci->getSourceManager());
 }
 
 std::string NamedDeclRemover::loc(clang::SourceLocation L)
@@ -100,15 +104,17 @@ std::string NamedDeclRemover::loc(clang::SourceLocation L)
 bool NamedDeclRemover::setResult(const NamedDecl *Decl,
 	SourceLocation Start, SourceLocation End)
 {
+	std::string name;
 	const NamedDecl *ED = this->getEffectiveDecl(Decl);
-	if (ED && nameMatches(ED, false))
+	if (ED && nameMatches(ED, name, false))
 	{
 		if (const FunctionDecl *FD = dyn_cast<const FunctionDecl>(Decl))
-			removeLocation(FD->getSourceRange().getBegin(), FD->getSourceRange().getEnd());
+			removeLocation(FD->getSourceRange().getBegin(), FD->getSourceRange().getEnd(), name);
 		else if (const FunctionTemplateDecl *FTD = dyn_cast<const FunctionTemplateDecl>(Decl))
-			removeLocation(FTD->getSourceRange().getBegin(), FTD->getSourceRange().getEnd());
+			removeLocation(FTD->getSourceRange().getBegin(), FTD->getSourceRange().getEnd(), name);
 		else
-			fprintf(stderr, "Unsupported declaration kind: \"%s\"\n", Decl->getDeclKindName());
+			fprintf(stderr, "Unsupported declaration kind of '%s': \'%s\'\n",
+				name.c_str(), Decl->getDeclKindName());
 	}
 
 	return true;

@@ -52,7 +52,7 @@ public :
 
 	refactorial::config::Config config;
 	std::map<std::string, std::string> touchedFiles;
-	std::vector<clang::tooling::Replacement> *replacements;
+	std::map<clang::tooling::Replacement, std::pair<std::string, int> > *replacements;
 
 	static TransformRegistry& get();
 	void add(const std::string &, transform_creator);

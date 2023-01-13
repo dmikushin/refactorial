@@ -19,18 +19,20 @@ void NamedDeclRenamer::loadConfig(refactorial::config::TransformConfig* transfor
 		renameList.push_back(RegexStringPair(llvm::Regex(r.from), r.to));
 }
 
-  // if we have a NamedDecl and the fully-qualified name matches
+// If we have a NamedDecl and the fully-qualified name matches.
 bool NamedDeclRenamer::nameMatches(
 	const clang::NamedDecl *D,
-	std::string &outNewName,
+	std::string& nameOld, std::string& nameNew,
 	bool checkOnly)
 {
 	if (!D) return false;
 
+	nameOld = D->getQualifiedNameAsString();
+	
 	auto I = nameMap.find(D);
 	if (I != nameMap.end())
 	{
-		outNewName = (*I).second;
+		nameNew = (*I).second;
 		return true;
 	}
 
@@ -40,25 +42,24 @@ bool NamedDeclRenamer::nameMatches(
 
 	if (!D->getLocation().isValid()) return false;
 
-	auto QN = D->getQualifiedNameAsString();
-	if (QN.size() == 0) return false;
+	if (nameOld.size() == 0) return false;
 
 	// special handling for TagDecl
 	if (auto T = llvm::dyn_cast<clang::TagDecl>(D))
 	{
 		auto KN = T->getKindName();
 		assert(!KN.empty() && "getKindName() must return a non-empty name");
-		QN.insert(0, KN);
-		QN.insert(KN.size(), " ");
+		nameOld.insert(0, KN);
+		nameOld.insert(KN.size(), " ");
 	}
 
 	llvm::SmallVector<llvm::StringRef, 10> matched;
 	for (auto I = renameList.begin(), E = renameList.end(); I != E; ++I)
 	{
-		if (I->first.match(QN, &matched))
+		if (I->first.match(nameOld, &matched))
 		{
-			outNewName = I->first.sub(I->second, QN);
-			nameMap[D] = outNewName;
+			nameNew = I->first.sub(I->second, nameOld);
+			nameMap[D] = nameNew;
 			return true;
 		}
 	}
@@ -66,7 +67,8 @@ bool NamedDeclRenamer::nameMatches(
 	return false;
 }
 
-void NamedDeclRenamer::renameLocation(clang::SourceLocation L, std::string& N)
+void NamedDeclRenamer::renameLocation(clang::SourceLocation L,
+	const std::string& nameOld, const std::string& nameNew)
 {
 	if (!L.isValid()) return;
     
@@ -125,7 +127,8 @@ void NamedDeclRenamer::renameLocation(clang::SourceLocation L, std::string& N)
 		// the API headers need no changing since later the new API will be
 		// in place)
 
-		Replacer::instance().replace(clang::SourceRange(L, E), N, ci->getSourceManager());
+		Replacer::instance().replace(clang::SourceRange(L, E),
+			nameOld, nameNew, ci->getSourceManager());
 	}
 }
 
@@ -137,10 +140,10 @@ std::string NamedDeclRenamer::loc(clang::SourceLocation L)
 bool NamedDeclRenamer::setResult(const NamedDecl *Decl,
 	SourceLocation Start, SourceLocation End)
 {
-	std::string NewName;
+	std::string nameOld, nameNew;
 	const NamedDecl *ED = this->getEffectiveDecl(Decl);
-	if (ED && nameMatches(ED, NewName, false))
-		renameLocation(Start, NewName);
+	if (ED && nameMatches(ED, nameOld, nameNew, false))
+		renameLocation(Start, nameOld, nameNew);
 
 	return true;
 }

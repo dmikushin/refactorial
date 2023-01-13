@@ -48,38 +48,6 @@ static bool ordering_cmp(const Replacement &LHS, const Replacement &RHS)
 	return LHS.getFilePath() < RHS.getFilePath();
 }
 
-// Remove duplicate replacements with order preservation
-static void stable_deduplicate(std::vector<Replacement> &r)
-{
-	// array sorted with Replacement::operator<()
-	std::vector<Replacement> sorted(r.begin(), r.end());
-	std::sort(sorted.begin(), sorted.end());
-
-	// search for duplicates, store every with counter
-	std::map<Replacement, int> doublets;
-	auto it = std::adjacent_find(sorted.begin(), sorted.end());
-	while (it != sorted.end())
-	{
-		doublets.insert(std::make_pair(*it, 0));
-		auto range = std::equal_range(it, sorted.end(), *it);
-		it = std::adjacent_find(range.second, sorted.end());
-	}
-
-	std::stable_sort(r.begin(), r.end(), ordering_cmp);
-
-	// collect duplicate indices except for the first in every equality set
-	std::vector<size_t> to_erase;
-	for (size_t i = 0, n = r.size(); i < n; ++i)
-	{
-		auto dit = doublets.find(r.at(i));
-		if (dit != doublets.end() && dit->second++ > 0)
-			to_erase.push_back(i);
-	}
-	
-	for (auto it = to_erase.rbegin(), end = to_erase.rend(); it != end; ++it)
-		r.erase(r.begin() + *it);
-}
-
 // Imported RefactoringTool::runAndSave() using std::vector
 static int commit_changes(RefactoringTool &Tool, const Replacements &R)
 {
@@ -145,9 +113,8 @@ int main(int argc, const char **argv)
 		{
 			auto& I = unused[i];
 	 
-			llvm::errs() << I.filename << ":" << I.line << ": warning:" <<
-				" function '" << LLVMSymbolizer::DemangleName(I.nameMangled, nullptr) <<
-				"' is unused";
+			llvm::errs() << I.filename << ":" << I.line << ": function '" <<
+				LLVMSymbolizer::DemangleName(I.nameMangled, nullptr) << "' is unused";
 			llvm::errs() << "\n";
 			for (auto & D : I.declarations)
 			{
@@ -174,7 +141,7 @@ int main(int argc, const char **argv)
 			IgnoringDiagConsumer ignore;
 			rt.setDiagnosticConsumer(&ignore);
 
-			std::vector<Replacement> replacements;
+			std::map<Replacement, std::pair<std::string, int> > replacements;
 			// TODO Not thread-safe
 			TransformRegistry::get().replacements = &replacements;
 
@@ -198,20 +165,31 @@ int main(int argc, const char **argv)
 			// TODO Is not a replacement, so should not be here.
 			EXEC_TRANSFORM("AccessorsTransform", accessors_transform)
 
-			stable_deduplicate(replacements);
-
 			if (print_replacements)
 			{
-				llvm::outs() << "Replacements collected by the tool:\n";
+				llvm::outs() << "The following changes will be made to the code:\n";
 				for (const auto& r : replacements)
-					llvm::outs() << r.toString() << "\n";
+				{
+					const auto& file = r.first.getFilePath();
+					const int line = r.second.second;
+					const auto& original = r.second.first;
+					const auto& replacement = r.first.getReplacementText();
+					
+					llvm::outs() << file << ":" << line << ": ";
+					if ((original != "") && (replacement != ""))
+						llvm::outs() << "'" << original << "' -> '" << replacement << "'\n";
+					else if (original != "")
+						llvm::outs() << "removing '" << original << "'\n";
+					else if (replacement != "")
+						llvm::outs() << "inserting '" << replacement << "'\n";
+				}
 			}
 
 			if (apply_replacements)
 			{
 				std::map<llvm::StringRef, Replacements> rs;
 				for (const auto& r : replacements)
-					auto err = rs[r.getFilePath()].add(r);
+					auto err = rs[r.first.getFilePath()].add(r.first);
 
 				for (const auto& r : rs)
 					commit_changes(rt, r.second);

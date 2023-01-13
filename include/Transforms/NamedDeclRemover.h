@@ -49,9 +49,12 @@ private :
 
 	bool nameMatches(
 		const clang::NamedDecl *decl,
+		std::string& name,
 		bool checkOnly = false);
 
-	void removeLocation(clang::SourceLocation L, clang::SourceLocation E);
+	void removeLocation(
+		clang::SourceLocation L, clang::SourceLocation E,
+		const std::string& name);
 
 	int indentLevel;
 	std::string indentString;

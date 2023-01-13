@@ -36,8 +36,9 @@ public:
 			clang::SourceManager* src_manager = result.SourceManager;
 			for (const clang::CXXBaseSpecifier base : rec->bases()) {
 				clang::SourceRange range = base.getSourceRange();
-				llvm::StringRef src_text = clang::Lexer::getSourceText(clang::CharSourceRange::getTokenRange(range),
-																	   *src_manager, clang::LangOptions(), 0);
+				llvm::StringRef src_text = 
+					clang::Lexer::getSourceText(clang::CharSourceRange::getTokenRange(range),
+					*src_manager, clang::LangOptions(), 0);
 
 				llvm::SmallVector<llvm::StringRef, 10> matched;
 				if (!_ui_class_regex.match(src_text, &matched)) {
@@ -48,8 +49,9 @@ public:
 				std::string classname = matched[2].str();
 				std::string parentclassname = matched[3].str();
 
-				std::string replacement_text = accessmodifier + " " + classname + "_" + parentclassname + ", public Ui::" + classname;
-				Replacer::instance().replace(range, replacement_text, *src_manager);
+				std::string replacement_text = accessmodifier + " " +
+					classname + "_" + parentclassname + ", public Ui::" + classname;
+				Replacer::instance().replace(range, src_text.str(), replacement_text, *src_manager);
 			}
 		}
 	}
