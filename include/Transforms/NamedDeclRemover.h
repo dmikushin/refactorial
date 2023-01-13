@@ -56,11 +56,18 @@ private :
 	int indentLevel;
 	std::string indentString;
 
-	std::vector<llvm::Regex> removeList;
+	struct Remove
+	{
+		Remove(const std::string& name_, bool mangled_) :
+			name(name_), mangled(mangled_) { }
+	
+		llvm::Regex name;
+		bool mangled;
+	};
+
+	std::vector<Remove> removeList;
 
 	std::set<const clang::Decl *> nameMap;
-	std::map<std::string, std::string> matchedStringMap;
-	std::set<std::string> unmatchedStringSet;
 };
 
 #endif // NAMED_DECL_REMOVER_H

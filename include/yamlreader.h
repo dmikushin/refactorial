@@ -30,6 +30,15 @@ namespace refactorial
 			std::string from;
 			std::string to;
 		};
+		
+		struct Remove
+		{
+			Remove(const std::string& name_, bool mangled_) :
+				name(name_), mangled(mangled_) { }
+		
+			std::string name;
+			bool mangled = false;
+		};
 
 		struct Change
 		{
@@ -50,8 +59,8 @@ namespace refactorial
 
 		struct RemoveConfig : TransformConfig
 		{
-			std::vector<std::string> removes;
-			bool remove_unused;
+			std::vector<Remove> removes;
+			bool remove_unused = false;
 		};
 
 		struct FunctionRemoveTransformConfig : RemoveConfig { };
@@ -310,7 +319,9 @@ namespace llvm
 					for (const std::string& p : within_paths)
 						frt.within_paths.push_back(refactorial::util::absolutePath(p));
 
-					frt.removes = removes;
+					for (const auto& r : removes)
+						frt.removes.emplace_back(r, false);
+
 					frt.remove_unused = remove_unused;
 					frt.used = true;
 					return frt;

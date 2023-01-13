@@ -6,6 +6,7 @@
 #include <clang/Tooling/CommonOptionsParser.h>
 #include <clang/Tooling/Refactoring.h>
 #include <clang/Tooling/Tooling.h>
+#include <llvm/DebugInfo/Symbolize/Symbolize.h>
 
 #include <algorithm>
 #include <atomic>
@@ -16,6 +17,7 @@
 
 using namespace clang;
 using namespace clang::tooling;
+using namespace llvm::symbolize;
 
 static llvm::cl::OptionCategory optionCategory("Refactorial options");
 
@@ -138,21 +140,23 @@ int main(int argc, const char **argv)
 		xunused(optionsParser.getCompilations(), unused);
 
 		// Add unused functions to the list for removal.
-		std::vector<std::string>& removes =
-			config.transforms.function_remove_transform.removes;
+		auto& removes = config.transforms.function_remove_transform.removes;
 		for (int i = 0; i < unused.size(); i++)
 		{
-			auto I = unused[i];
+			auto& I = unused[i];
 	 
 			llvm::errs() << I.filename << ":" << I.line << ": warning:" <<
-				" Function '" << I.name << "' is unused";
-			for (auto & D : I.declarations)
-				llvm::errs() << " " << D.filename << ":" << D.line <<
-					": note:" << " declared here";
-
+				" function '" << LLVMSymbolizer::DemangleName(I.nameMangled, nullptr) <<
+				"' is unused";
 			llvm::errs() << "\n";
+			for (auto & D : I.declarations)
+			{
+				llvm::errs() << D.filename << ":" << D.line <<
+					": note:" << " declared here";
+				llvm::errs() << "\n";
+			}
 
-			removes.push_back(I.name);
+			removes.emplace_back(I.nameMangled, true);
 		}
 	}
 

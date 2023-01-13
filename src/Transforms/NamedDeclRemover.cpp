@@ -4,6 +4,7 @@
 
 #include <clang/AST/Decl.h>
 #include <clang/AST/Stmt.h>
+#include "clang/AST/Mangle.h"
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Lex/Preprocessor.h>
 #include <clang/Tooling/Refactoring.h>
@@ -12,11 +13,31 @@
 
 using namespace clang;
 
+static std::string getMangledName(const NamedDecl* decl)
+{
+	auto& context = decl->getASTContext();
+	auto mangleContext = context.createMangleContext();
+
+	if (!mangleContext->shouldMangleDeclName(decl))
+		return decl->getQualifiedNameAsString();
+
+	std::string mangledName;
+	llvm::raw_string_ostream ostream(mangledName);
+
+	mangleContext->mangleName(decl, ostream);
+
+	ostream.flush();
+
+	delete mangleContext;
+
+	return mangledName;
+};
+
 void NamedDeclRemover::loadConfig(refactorial::config::TransformConfig* transform_)
 {
 	auto transform = static_cast<refactorial::config::RemoveConfig*>(transform_);
 	for (const auto& r : transform->removes)
-		removeList.push_back(llvm::Regex(r));
+		removeList.emplace_back(r.name, r.mangled);
 }
 
   // if we have a NamedDecl and the fully-qualified name matches
@@ -26,8 +47,7 @@ bool NamedDeclRemover::nameMatches(
 {
 	if (!D) return false;
 
-	auto I = nameMap.find(D);
-	if (I != nameMap.end())
+	if (nameMap.find(D) != nameMap.end())
 		return true;
 
 	// if we only need a quick look-up of renamed Decl's
@@ -38,7 +58,7 @@ bool NamedDeclRemover::nameMatches(
 
 	auto QN = D->getQualifiedNameAsString();
 	if (QN.size() == 0) return false;
-
+	
 	// special handling for TagDecl
 	if (auto T = llvm::dyn_cast<clang::TagDecl>(D))
 	{
@@ -49,9 +69,9 @@ bool NamedDeclRemover::nameMatches(
 	}
 
 	llvm::SmallVector<llvm::StringRef, 10> matched;
-	for (auto I = removeList.begin(), E = removeList.end(); I != E; ++I)
+	for (auto& I : removeList)
 	{
-		if (I->match(QN, &matched))
+		if (I.name.match(I.mangled ? getMangledName(D) : QN, &matched))
 		{
 			nameMap.insert(D);
 			return true;
