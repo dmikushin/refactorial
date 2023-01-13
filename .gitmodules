@@ -1,0 +1,3 @@
+[submodule "ThirdParty/xunused"]
+	path = ThirdParty/xunused
+	url = https://github.com/dmikushin/xunused.git

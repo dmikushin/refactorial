@@ -12,6 +12,8 @@ find_package(PCRECPP REQUIRED)
 # and not the idiotic oneAPI, which broke everything.
 find_package(TBB PATHS "/usr/lib/x86_64-linux-gnu/cmake/TBB" REQUIRED NO_DEFAULT_PATH)
 
+add_subdirectory(ThirdParty/xunused EXCLUDE_FROM_ALL)
+
 add_executable(${PROJECT_NAME}
     src/main.cpp
     src/util.cpp
@@ -41,7 +43,8 @@ target_compile_options(${PROJECT_NAME} PRIVATE $<$<BOOL:${MSVC}>:/wd4624> $<$<BO
 target_link_directories(${PROJECT_NAME} PRIVATE ${LLVM_LIBRARY_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE clangTooling clangToolingCore clangDriver clangFrontend
     clangFrontendTool clangParse clangSema clangEdit clangLex clangAnalysis clangRewrite clangRewriteFrontend
-    clangSerialization clangAST clangASTMatchers clangDynamicASTMatchers clangBasic clangIndex ${PCRECPP_LIBRARIES} TBB::tbb)
+    clangSerialization clangAST clangASTMatchers clangDynamicASTMatchers clangBasic clangIndex
+    xunused_embedded ${PCRECPP_LIBRARIES} TBB::tbb)
 
 add_custom_target(test_accessors
     DEPENDS ${PROJECT_NAME}

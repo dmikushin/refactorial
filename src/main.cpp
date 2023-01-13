@@ -1,3 +1,6 @@
+#include "Transforms/Transforms.h"
+#include "xunused.h"
+
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/CommonOptionsParser.h>
@@ -10,8 +13,6 @@
 #include <iostream>
 #include <fstream>
 #include <map>
-
-#include "Transforms/Transforms.h"
 
 using namespace clang;
 using namespace clang::tooling;
@@ -130,6 +131,31 @@ int main(int argc, const char **argv)
 	llvm::yaml::Input yin(config_yaml);
 	yin >> config;
 
+	if (config.transforms.function_remove_transform.remove_unused)
+	{
+		// Run xunused separately to get the list of unused functions.
+		std::vector<UnusedDefInfo> unused;
+		xunused(optionsParser.getCompilations(), unused);
+
+		// Add unused functions to the list for removal.
+		std::vector<std::string>& removes =
+			config.transforms.function_remove_transform.removes;
+		for (int i = 0; i < unused.size(); i++)
+		{
+			auto I = unused[i];
+	 
+			llvm::errs() << I.filename << ":" << I.line << ": warning:" <<
+				" Function '" << I.name << "' is unused";
+			for (auto & D : I.declarations)
+				llvm::errs() << " " << D.filename << ":" << D.line <<
+					": note:" << " declared here";
+
+			llvm::errs() << "\n";
+
+			removes.push_back(I.name);
+		}
+	}
+
 	TransformRegistry::get().config = config;
 
 	for (auto&& file : sources)
@@ -189,7 +215,7 @@ int main(int argc, const char **argv)
 		});
 	}
 
-	std::for_each(std::execution::par_unseq, std::begin(tasks), std::end(tasks), [](auto && f) { f(); });
+	std::for_each(/*std::execution::par_unseq,*/ std::begin(tasks), std::end(tasks), [](auto && f) { f(); });
 
 	return 0;
 }
