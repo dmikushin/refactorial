@@ -1,16 +1,8 @@
-#include <clang/AST/AST.h>
-#include <clang/AST/ASTContext.h>
-#include <clang/AST/RecursiveASTVisitor.h>
-#include <clang/Lex/Lexer.h>
-#include <clang/Index/USRGeneration.h>
+#ifndef NAMED_DECL_VISITOR_H
+#define NAMED_DECL_VISITOR_H
 
-using namespace llvm;
-using namespace clang;
-
-// NamedDeclFindingASTVisitor recursively visits each AST node to find the
+// NamedDeclVisitor recursively visits each AST node to find the
 // symbol underneath the cursor.
-namespace {
-
 template<typename NamedDeclChanger>
 class NamedDeclVisitor :
 	public NamedDeclChanger,
@@ -167,7 +159,8 @@ private :
 			if (Decl && !setResult(Decl, NameLoc.getLocalBeginLoc(),
 				Decl->getNameAsString().length()))
 				return false;
-				NameLoc = NameLoc.getPrefix();
+
+			NameLoc = NameLoc.getPrefix();
 		}
 		return true;
 	}
@@ -176,7 +169,9 @@ private :
 		unsigned Offset)
 	{
 		// FIXME: Add test for Offset == 0. Add test for Offset - 1 (vs -2 etc).
-		return Offset == 0 || NamedDeclChanger::setResult(Decl, Loc, Loc.getLocWithOffset(Offset - 1));
+		return Offset == 0 || NamedDeclChanger::setResult(
+			Decl, Loc, Loc.getLocWithOffset(Offset - 1));
 	}
 };
 
+#endif // NAMED_DECL_VISITOR_H

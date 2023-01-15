@@ -1,11 +1,19 @@
 #include "NamedDeclRemover.h"
 #include "Transforms.h"
-#include "NamedDeclVisitor.h"
 
+#include <clang/AST/AST.h>
+#include <clang/AST/ASTContext.h>
+#include <clang/AST/RecursiveASTVisitor.h>
+#include <clang/Lex/Lexer.h>
+#include <clang/Index/USRGeneration.h>
 #include <llvm/ADT/SmallVector.h>
 
 using namespace llvm;
 using namespace clang;
+
+namespace {
+
+#include "NamedDeclVisitor.h"
 
 class TypeRemoveTransform : public NamedDeclVisitor<NamedDeclRemover>
 {
@@ -86,5 +94,5 @@ REGISTER_TRANSFORM(TypeRemoveTransform);
 REGISTER_TRANSFORM(FunctionRemoveTransform);
 REGISTER_TRANSFORM(RecordFieldRemoveTransform);
 
-}
+} // namespace
 
