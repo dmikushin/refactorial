@@ -113,8 +113,8 @@ bool NamedDeclRemover::setResult(const NamedDecl *Decl,
 		else if (const FunctionTemplateDecl *FTD = dyn_cast<const FunctionTemplateDecl>(Decl))
 			removeLocation(FTD->getSourceRange().getBegin(), FTD->getSourceRange().getEnd(), name);
 		else
-			fprintf(stderr, "Unsupported declaration kind of '%s': \'%s\'\n",
-				name.c_str(), Decl->getDeclKindName());
+			llvm::errs() << "Unsupported declaration kind of '" << name.c_str() <<
+				"': '" << Decl->getDeclKindName() << "'\n";
 	}
 
 	return true;
