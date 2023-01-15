@@ -52,6 +52,13 @@ public :
 			Decl->getNameAsString().length());
 	}
 
+	bool VisitCXXConstructExpr(const CXXConstructExpr *Expr)
+	{
+		const auto *Decl = Expr->getConstructor();
+		return setResult(Decl, Expr->getLocation(),
+			Decl->getNameAsString().length());
+	}
+
 	bool VisitTypeLoc(TypeLoc TL)
 	{
 		const NamedDecl *Decl = nullptr;

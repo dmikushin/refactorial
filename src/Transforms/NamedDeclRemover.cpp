@@ -13,25 +13,33 @@
 
 using namespace clang;
 
+// Get mangled name for a declaration.
+// https://stackoverflow.com/q/40740604/4063520
 static std::string getMangledName(const NamedDecl* decl)
 {
 	auto& context = decl->getASTContext();
-	auto mangleContext = context.createMangleContext();
+	std::unique_ptr<MangleContext> mangleContext(context.createMangleContext());
 
 	if (!mangleContext->shouldMangleDeclName(decl))
 		return decl->getQualifiedNameAsString();
 
+	// Spent a day figuring out mangling a constructor needs
+	// this crazy shit, see clang/lib/AST/Mangle.cpp.
+	GlobalDecl GD;
+	if (const auto *CtorD = dyn_cast<CXXConstructorDecl>(decl))
+		GD = GlobalDecl(CtorD, Ctor_Complete);
+	else
+		GD = GlobalDecl(decl);
+
 	std::string mangledName;
 	llvm::raw_string_ostream ostream(mangledName);
 
-	mangleContext->mangleName(decl, ostream);
+	mangleContext->mangleName(GD, ostream);
 
 	ostream.flush();
 
-	delete mangleContext;
-
 	return mangledName;
-};
+}
 
 void NamedDeclRemover::loadConfig(refactorial::config::TransformConfig* transform_)
 {

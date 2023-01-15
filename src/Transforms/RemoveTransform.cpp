@@ -60,9 +60,9 @@ public :
 	const NamedDecl *getEffectiveDecl(const NamedDecl *Decl) override
 	{
 		if ((dyn_cast<FunctionDecl>(Decl) &&
-			!dyn_cast<CXXConstructorDecl>(Decl) &&
 			!dyn_cast<CXXDestructorDecl>(Decl) &&
 			!dyn_cast<CXXConversionDecl>(Decl)) ||
+			dyn_cast<CXXConstructorDecl>(Decl) ||
 			dyn_cast<FunctionTemplateDecl>(Decl))
 			return Decl;
 
