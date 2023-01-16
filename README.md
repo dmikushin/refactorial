@@ -21,7 +21,7 @@ This is an update of the [original Refactorial](https://github.com/lukhnos/refac
 ## Prerequisites
 
 ```
-sudo apt install llvm-12-dev clang-12 libclang-12-dev libtbb-dev
+sudo apt install llvm-12-dev clang-12 libclang-12-dev libtbb-dev libpcre3-dev
 ```
 
 ## Building
