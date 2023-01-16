@@ -112,15 +112,18 @@ int main(int argc, const char **argv)
 		for (int i = 0; i < unused.size(); i++)
 		{
 			auto& I = unused[i];
-	 
-			llvm::errs() << I.filename << ":" << I.line << ": function '" <<
-				LLVMSymbolizer::DemangleName(I.nameMangled, nullptr) << "' is unused";
-			llvm::errs() << "\n";
-			for (auto & D : I.declarations)
+
+			if (print_replacements)
 			{
-				llvm::errs() << D.filename << ":" << D.line <<
-					": note:" << " declared here";
+				llvm::errs() << I.filename << ":" << I.line << ": function '" <<
+					LLVMSymbolizer::DemangleName(I.nameMangled, nullptr) << "' is unused";
 				llvm::errs() << "\n";
+				for (auto & D : I.declarations)
+				{
+					llvm::errs() << D.filename << ":" << D.line <<
+						": note:" << " declared here";
+					llvm::errs() << "\n";
+				}
 			}
 
 			removes.emplace_back(I.nameMangled, true);
