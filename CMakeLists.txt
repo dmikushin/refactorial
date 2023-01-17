@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.13)
 
 project(refactorial CXX)
 
@@ -54,15 +54,21 @@ add_custom_target(test_accessors
     COMMENT "Testing Accessors")
 
 add_custom_target(test_function_rename
-     DEPENDS ${PROJECT_NAME}
-     COMMAND ${CMAKE_COMMAND} -S ${CMAKE_CURRENT_SOURCE_DIR}/tests/FunctionRename -B${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRename -DREFACTORIAL=$<TARGET_FILE:${PROJECT_NAME}> -DCMAKE_CXX_COMPILER=${LLVM_TOOLS_BINARY_DIR}/clang++${CMAKE_EXECUTABLE_SUFFIX}
-     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRename --target test
-     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRename
-     COMMENT "Testing FunctionRename")
+    DEPENDS ${PROJECT_NAME}
+    COMMAND ${CMAKE_COMMAND} -S ${CMAKE_CURRENT_SOURCE_DIR}/tests/FunctionRename -B${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRename -DREFACTORIAL=$<TARGET_FILE:${PROJECT_NAME}> -DCMAKE_CXX_COMPILER=${LLVM_TOOLS_BINARY_DIR}/clang++${CMAKE_EXECUTABLE_SUFFIX}
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRename --target test
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRename
+    COMMENT "Testing FunctionRename")
 
 add_custom_target(test_function_remove
-      DEPENDS ${PROJECT_NAME}
-      COMMAND ${CMAKE_COMMAND} -S ${CMAKE_CURRENT_SOURCE_DIR}/tests/FunctionRemove -B${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRemove -DREFACTORIAL=$<TARGET_FILE:${PROJECT_NAME}> -DCMAKE_CXX_COMPILER=${LLVM_TOOLS_BINARY_DIR}/clang++${CMAKE_EXECUTABLE_SUFFIX}
-      COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRemove --target test
-      COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRemove
-      COMMENT "Testing FunctionRemove")
+    DEPENDS ${PROJECT_NAME}
+    COMMAND ${CMAKE_COMMAND} -S ${CMAKE_CURRENT_SOURCE_DIR}/tests/FunctionRemove -B${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRemove -DREFACTORIAL=$<TARGET_FILE:${PROJECT_NAME}> -DCMAKE_CXX_COMPILER=${LLVM_TOOLS_BINARY_DIR}/clang++${CMAKE_EXECUTABLE_SUFFIX}
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRemove --target test
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/tests/FunctionRemove
+    COMMENT "Testing FunctionRemove")
+
+add_custom_target(docker
+    COMMAND docker build -f ${CMAKE_CURRENT_SOURCE_DIR}/docker/Dockerfile -t ${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/docker
+    COMMAND docker run -it --rm --user "${UID}:${GID}" -v${CMAKE_CURRENT_SOURCE_DIR}:/project ${PROJECT_NAME} sh /project/docker/scripts/build.sh
+    COMMENT "Building ${PROJECT_NAME} in a Docker container")
+
