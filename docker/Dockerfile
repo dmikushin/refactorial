@@ -1,4 +1,4 @@
-FROM clang-debian10:12
+FROM clang12-ubuntu:jammy
 
 LABEL maintainer="dmitry@kernelgen.org"
 
@@ -12,7 +12,9 @@ RUN apt-get update && \
 		cmake \
 		ninja-build \
 		libtbb-dev \
-		libpcre3-dev && \
+		libpcre3-dev \
+		zlib1g-dev \
+		g++-11 && \
 	apt-get clean
 
 COPY . /root/

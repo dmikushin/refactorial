@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(refactorial CXX)
+project(refactorial LANGUAGES CXX)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -43,7 +43,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE $<$<BOOL:${MSVC}>:/wd4624> $<$<BO
 target_link_directories(${PROJECT_NAME} PRIVATE ${LLVM_LIBRARY_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE clangTooling clangToolingCore clangDriver clangFrontend
     clangFrontendTool clangParse clangSema clangEdit clangLex clangAnalysis clangRewrite clangRewriteFrontend
-    clangSerialization clangAST clangASTMatchers clangDynamicASTMatchers clangBasic clangIndex
+    clangSerialization clangAST clangASTMatchers clangDynamicASTMatchers clangBasic clangIndex LLVMSymbolize
     xunused_embedded ${PCRECPP_LIBRARIES} TBB::tbb)
 
 add_custom_target(test_accessors

@@ -99,6 +99,21 @@ what each source transform does and which parameters they take.
 - The result field initialization in the Example constructor is not changed.
 - `QValueList<QVariant>` in the iterator loop is not changed.
 
+## Development
+
+Use Docker to compile clang-12 with debug information:
+
+```
+./llvm/utils/docker/build_docker_image.sh \
+    -s jammy -d clang12-ubuntu -t "jammy" \
+    --branch release/12.x \
+    -p clang \
+    -i install \
+    -- \
+    -DLLVM_TARGETS_TO_BUILD=host \
+    -DCMAKE_BUILD_TYPE=Debug
+```
+
 ## Copyright and License
 
 Copyright © 2012 Lukhnos Liu and Thomas Minor  
