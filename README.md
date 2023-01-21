@@ -2,7 +2,7 @@
 
 Refactorial is a Clang-based refactoring tool for C, C++, Objective-C, and Objective-C++. It has a number of nice properties:
 
-1.  It runs independent of any IDE
+1.  It runs independently of any IDE
 2.  It refactors C, C++, Objective-C and Objective-C++ programs
 3.  It can refactor both a library and its clients using the same script, so that library developers can upgrade libraries more easily by distributing the script
 4.  It is extensible
