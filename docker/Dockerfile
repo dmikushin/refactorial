@@ -1,4 +1,4 @@
-FROM clang12-ubuntu:jammy
+FROM clang12-ubuntu:debug
 
 LABEL maintainer="dmitry@kernelgen.org"
 

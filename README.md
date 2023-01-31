@@ -104,8 +104,8 @@ what each source transform does and which parameters they take.
 Use Docker to compile clang-12 with debug information:
 
 ```
-./llvm/utils/docker/build_docker_image.sh \
-    -s jammy -d clang12-ubuntu -t "jammy" \
+./docker/build_docker_image.sh \
+    -s jammy -d clang12-ubuntu -t "debug" \
     --branch release/12.x \
     -p clang \
     -i install \
